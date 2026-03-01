@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SHOTFORM AI 3.6 — Expanded View</title>
+<title>SHOTFORM AI 3.9 — Gesture Remote</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=Inter:wght@400;700&display=swap');
 
@@ -14,7 +14,6 @@
     --card: #1c1c1c;
     --border: #2a2a2a;
     --good: #2EFF9A;
-    --warn: #FFD93D;
     --bad: #FF4455;
     --text: #ffffff;
     --muted: #888;
@@ -28,48 +27,51 @@
   
   .layout { display: flex; flex: 1; overflow: hidden; }
 
-  /* VIDEO ENGINE - Fixed for Mobile */
+  /* VIDEO ENGINE */
   .vwrap { flex: 1; position: relative; background: #000; display: flex; align-items: center; justify-content: center; overflow: hidden; }
   video#vid { position: absolute; width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
   canvas#overlay { position: absolute; width: 100%; height: 100%; transform: scaleX(-1); z-index: 5; pointer-events: none; }
 
-  /* SIDEBAR DASHBOARD */
-  .sidebar { width: 360px; background: var(--dark); border-left: 1px solid var(--border); padding: 20px; display: flex; flex-direction: column; gap: 15px; overflow-y: auto; }
+  /* COUNTDOWN OVERLAY */
+  #countdown {
+    position: absolute; inset: 0; z-index: 100;
+    display: none; align-items: center; justify-content: center;
+    background: rgba(0,0,0,0.4); font-family: 'Bebas Neue';
+    font-size: 180px; color: var(--orange); text-shadow: 0 0 30px rgba(255,107,0,0.6);
+  }
+
+  /* SIDEBAR */
+  .sidebar { width: 380px; background: var(--dark); border-left: 1px solid var(--border); padding: 15px; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; }
   
-  .score-sec { display: flex; flex-direction: column; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); }
-  .ring-container { position: relative; width: 90px; height: 90px; }
-  .ring-svg { transform: rotate(-90deg); width: 90px; height: 90px; }
-  .ring-bg { fill: none; stroke: var(--border); stroke-width: 8; }
-  .ring-progress { fill: none; stroke: var(--orange); stroke-width: 8; stroke-linecap: round; stroke-dasharray: 283; stroke-dashoffset: 283; transition: stroke-dashoffset 0.5s; }
+  .score-sec { display: flex; flex-direction: column; align-items: center; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+  .ring-container { position: relative; width: 85px; height: 85px; }
+  .ring-svg { transform: rotate(-90deg); width: 85px; height: 85px; }
+  .ring-bg { fill: none; stroke: var(--border); stroke-width: 7; }
+  .ring-progress { fill: none; stroke: var(--orange); stroke-width: 7; stroke-linecap: round; stroke-dasharray: 251; stroke-dashoffset: 251; transition: stroke-dashoffset 0.5s; }
   .score-text { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: 'Bebas Neue'; font-size: 28px; }
 
-  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .stat-box { background: var(--card); padding: 12px; border-radius: 8px; border: 1px solid var(--border); position: relative; overflow: hidden; }
-  .stat-label { font-size: 9px; color: var(--muted); text-transform: uppercase; font-weight: bold; margin-bottom: 4px; }
-  .stat-val { font-family: 'Bebas Neue'; font-size: 24px; color: var(--text); }
-  .stat-bar { position: absolute; bottom: 0; left: 0; height: 3px; background: var(--orange); transition: width 0.3s; }
+  .coach-card { background: rgba(255, 107, 0, 0.1); border: 1px solid var(--orange); border-radius: 8px; padding: 12px; }
+  .coach-label { font-family: 'Bebas Neue'; font-size: 11px; color: var(--orange); margin-bottom: 4px; }
+  .coach-msg { font-size: 12px; line-height: 1.4; }
 
-  /* DURATION TOGGLE */
-  .toggle-wrap { display: flex; background: var(--black); border-radius: 6px; padding: 4px; border: 1px solid var(--border); margin-top: 5px; }
-  .tgl-btn { flex: 1; border: none; background: transparent; color: var(--muted); padding: 8px; font-family: 'Bebas Neue'; font-size: 14px; cursor: pointer; border-radius: 4px; }
-  .tgl-btn.active { background: var(--orange); color: black; }
+  .gesture-hint {
+    background: var(--card); border: 1px solid var(--good); border-radius: 6px; padding: 10px;
+    font-size: 10px; color: var(--good); text-align: center; font-family: 'DM Mono';
+  }
 
-  .log-container { flex: 1; min-height: 120px; overflow-y: auto; background: rgba(0,0,0,0.2); border-radius: 6px; padding: 10px; border: 1px solid var(--border); }
-  .log-table { width: 100%; border-collapse: collapse; font-size: 11px; }
-  .log-table th { text-align: left; color: var(--muted); padding-bottom: 5px; border-bottom: 1px solid var(--border); }
-  .log-table td { padding: 6px 0; border-bottom: 1px solid #222; }
+  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .stat-box { background: var(--card); padding: 10px; border-radius: 6px; border: 1px solid var(--border); }
+  .stat-label { font-size: 9px; color: var(--muted); text-transform: uppercase; font-weight: bold; }
+  .stat-val { font-family: 'Bebas Neue'; font-size: 22px; color: var(--text); }
 
-  .controls { margin-top: auto; display: flex; flex-direction: column; gap: 8px; padding-top: 15px; }
-  .btn { border: none; padding: 14px; border-radius: 6px; font-weight: bold; cursor: pointer; font-family: 'Inter'; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
-  .btn-rec { background: #ff4444; color: white; }
-  .btn-stop { background: var(--border); color: white; font-size: 12px; }
-  
-  #idle { position: absolute; inset: 0; z-index: 40; background: var(--black); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; }
-  .btn-start { background: var(--orange); padding: 18px 50px; font-family: 'Bebas Neue'; font-size: 22px; border: none; cursor: pointer; border-radius: 4px; }
+  .controls { margin-top: auto; display: flex; flex-direction: column; gap: 6px; padding-top: 10px; }
+  .btn { border: none; padding: 12px; border-radius: 5px; font-weight: bold; cursor: pointer; font-family: 'Inter'; font-size: 13px; background: var(--border); color: white; }
+
+  #downloadArea a { display: block; background: var(--good); color: black; text-decoration: none; padding: 10px; text-align: center; border-radius: 4px; font-weight: bold; font-size: 11px; margin-top: 4px; }
 
   @media (max-width: 750px) {
     .layout { flex-direction: column; }
-    .vwrap { flex: none; height: 60vh; } /* Forces camera window to be 60% of screen height */
+    .vwrap { flex: none; height: 50vh; }
     .sidebar { width: 100%; height: auto; border-left: none; border-top: 1px solid var(--border); flex: 1; }
   }
 </style>
@@ -77,61 +79,53 @@
 <body>
 
 <header>
-  <div class="logo">SHOTFORM PRO <em>3.6</em></div>
-  <div id="recStatus" style="font-family: 'DM Mono'; font-size: 10px; color: var(--bad); display: none;">● RECORDING</div>
+  <div class="logo">SHOTFORM PRO <em>3.9</em></div>
+  <div id="recStatus" style="font-family: 'DM Mono'; font-size: 10px; color: var(--bad); display: none;">● RECORDING ANALYTICS</div>
 </header>
 
 <div class="layout">
   <div class="vwrap" id="container">
     <video id="vid" autoplay playsinline muted></video>
     <canvas id="overlay"></canvas>
-    <div id="idle"><button class="btn-start" onclick="startCamera()">START ENGINE</button></div>
+    <div id="countdown">3</div>
+    <div id="idle"><button style="background:var(--orange); border:none; padding:15px 40px; font-family:'Bebas Neue'; font-size:20px; border-radius:4px; cursor:pointer;" onclick="startCamera()">LAUNCH ENGINE</button></div>
   </div>
 
   <div class="sidebar">
     <div class="score-sec">
       <div class="ring-container">
-        <svg class="ring-svg"><circle class="ring-bg" cx="45" cy="45" r="40"/><circle class="ring-progress" id="scoreRing" cx="45" cy="45" r="40"/></svg>
+        <svg class="ring-svg"><circle class="ring-bg" cx="42.5" cy="42.5" r="39"/><circle class="ring-progress" id="scoreRing" cx="42.5" cy="42.5" r="39"/></svg>
         <div class="score-text" id="v-total">0</div>
       </div>
     </div>
 
+    <div class="gesture-hint" id="gestureHint">🙌 HOLD ARMS IN "V" ABOVE HEAD TO TRIGGER</div>
+
+    <div class="coach-card">
+      <div class="coach-label">PRO COACH FEEDBACK</div>
+      <div class="coach-msg" id="coachMsg">Ready for analysis. Stand back and show your full frame.</div>
+    </div>
+
     <div class="stats-grid">
-      <div class="stat-box"><div class="stat-label">Elbow</div><div class="stat-val" id="v-elbow">0°</div><div class="stat-bar" id="bar-elbow"></div></div>
-      <div class="stat-box"><div class="stat-label">Knee</div><div class="stat-val" id="v-knee">0°</div><div class="stat-bar" id="bar-knee"></div></div>
-    </div>
-
-    <div style="margin-top: 5px;">
-      <div style="font-size: 9px; color: var(--muted); text-transform: uppercase; font-weight: bold; margin-bottom: 4px;">Clip Duration</div>
-      <div class="toggle-wrap">
-        <button class="tgl-btn active" id="tgl5" onclick="setDuration(5)">5s</button>
-        <button class="tgl-btn" id="tgl10" onclick="setDuration(10)">10s</button>
-      </div>
-    </div>
-
-    <div class="log-container">
-      <table class="log-table">
-        <thead><tr><th>TIME</th><th>SCORE</th><th>WEAKNESS</th></tr></thead>
-        <tbody id="logBody"></tbody>
-      </table>
+      <div class="stat-box"><div class="stat-label">Elbow</div><div class="stat-val" id="v-elbow">0°</div></div>
+      <div class="stat-box"><div class="stat-label">Knee</div><div class="stat-val" id="v-knee">0°</div></div>
     </div>
 
     <div class="controls">
-      <button class="btn btn-rec" id="recBtn" onclick="recordClip()" disabled>RECORD CLIP</button>
-      <button class="btn btn-stop" onclick="stopSession()">STOP CAMERA</button>
       <div id="downloadArea"></div>
+      <button class="btn" onclick="stopSession()">CLOSE ENGINE</button>
     </div>
   </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose"></script>
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-core"></script>
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-converter"></script>
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/pose-detection"></script>
 
 <script>
 let detector, stream, isTracking = false, currentPose = null;
-let recorder, recordedChunks = [], clipDuration = 5;
+let recorder, recordedChunks = [], isRecording = false;
+let gestureCounter = 0; // Tracks frames where V-gesture is held
 
 async function init() {
   detector = await poseDetection.createDetector(poseDetection.SupportedModels.BlazePose, {
@@ -147,9 +141,7 @@ async function startCamera() {
       document.getElementById('vid').play();
       isTracking = true;
       document.getElementById('idle').style.display = 'none';
-      document.getElementById('recBtn').disabled = false;
-      resize();
-      loop();
+      resize(); loop();
     };
   } catch (e) { alert("Camera Error"); }
 }
@@ -160,17 +152,7 @@ function resize() {
   c.width = rect.width; c.height = rect.height;
 }
 
-function setDuration(sec) {
-  clipDuration = sec;
-  document.getElementById('tgl5').classList.toggle('active', sec === 5);
-  document.getElementById('tgl10').classList.toggle('active', sec === 10);
-}
-
-function stopSession() {
-  isTracking = false;
-  if (stream) stream.getTracks().forEach(t => t.stop());
-  document.getElementById('idle').style.display = 'flex';
-}
+function stopSession() { isTracking = false; if (stream) stream.getTracks().forEach(t => t.stop()); document.getElementById('idle').style.display = 'flex'; }
 
 async function loop() {
   if (!isTracking) return;
@@ -181,9 +163,48 @@ async function loop() {
     currentPose = poses[0];
     const m = calculateMapping(vid, canvas);
     drawSkeleton(ctx, currentPose.keypoints, m);
-    updateAnalytics(currentPose.keypoints);
+    updateCoachingLogic(currentPose.keypoints);
+    if (!isRecording) checkGesture(currentPose.keypoints);
   }
   requestAnimationFrame(loop);
+}
+
+// ── GESTURE DETECTION ────────────────────────────────
+function checkGesture(k) {
+  // Check if both wrists are above the eyes and wider than shoulders (V-shape)
+  const leftWrist = k[15], rightWrist = k[16], leftEye = k[2], rightEye = k[5];
+  const leftShoulder = k[11], rightShoulder = k[12];
+
+  if (leftWrist.score > 0.6 && rightWrist.score > 0.6) {
+    const handsUp = leftWrist.y < leftEye.y && rightWrist.y < rightEye.y;
+    const handsWide = leftWrist.x < leftShoulder.x && rightWrist.x > rightShoulder.x;
+
+    if (handsUp && handsWide) {
+      gestureCounter++;
+      document.getElementById('gestureHint').style.background = `rgba(46, 255, 154, ${gestureCounter/40})`;
+      if (gestureCounter > 40) { // Approx 1.5 - 2 seconds of holding
+        triggerCountdown();
+        gestureCounter = 0;
+      }
+    } else {
+      gestureCounter = 0;
+      document.getElementById('gestureHint').style.background = 'var(--card)';
+    }
+  }
+}
+
+async function triggerCountdown() {
+  isRecording = true; // Block double triggers
+  const cd = document.getElementById('countdown');
+  cd.style.display = 'flex';
+  
+  for (let i = 3; i > 0; i--) {
+    cd.textContent = i;
+    await new Promise(r => setTimeout(r, 1000));
+  }
+  
+  cd.style.display = 'none';
+  recordClip();
 }
 
 function calculateMapping(vid, canvas) {
@@ -197,72 +218,64 @@ function calculateMapping(vid, canvas) {
 function drawSkeleton(ctx, k, m) {
   const conn = [[11,12],[11,13],[13,15],[12,14],[14,16],[11,23],[12,24],[23,24],[23,25],[25,27],[24,26],[26,28]];
   ctx.strokeStyle = '#FF6B00'; ctx.lineWidth = 4;
-  conn.forEach(([i, j]) => {
-    if (k[i].score > 0.5 && k[j].score > 0.5) {
-      ctx.beginPath();
-      ctx.moveTo(k[i].x * m.s + m.oX, k[i].y * m.s + m.oY);
-      ctx.lineTo(k[j].x * m.s + m.oX, k[j].y * m.s + m.oY);
-      ctx.stroke();
-    }
-  });
+  conn.forEach(([i, j]) => { if (k[i].score > 0.5 && k[j].score > 0.5) {
+    ctx.beginPath(); ctx.moveTo(k[i].x * m.s + m.oX, k[i].y * m.s + m.oY); ctx.lineTo(k[j].x * m.s + m.oX, k[j].y * m.s + m.oY); ctx.stroke();
+  }});
 }
 
-function updateAnalytics(k) {
-  const getA = (p1, p2, p3) => {
-    const v1 = {x: p1.x-p2.x, y: p1.y-p2.y, z: p1.z-p2.z}, v2 = {x: p3.x-p2.x, y: p3.y-p2.y, z: p3.z-p2.z};
-    const dot = v1.x*v2.x + v1.y*v2.y + v1.z*v2.z, m1 = Math.sqrt(v1.x**2+v1.y**2+v1.z**2), m2 = Math.sqrt(v2.x**2+v2.y**2+v2.z**2);
-    return Math.round(Math.acos(dot/(m1*m2))*180/Math.PI);
-  };
+function getAngle(p1, p2, p3) {
+  const v1 = {x: p1.x-p2.x, y: p1.y-p2.y, z: p1.z-p2.z}, v2 = {x: p3.x-p2.x, y: p3.y-p2.y, z: p3.z-p2.z};
+  const dot = v1.x*v2.x + v1.y*v2.y + v1.z*v2.z, m1 = Math.sqrt(v1.x**2+v1.y**2+v1.z**2), m2 = Math.sqrt(v2.x**2+v2.y**2+v2.z**2);
+  return Math.round(Math.acos(Math.min(1, Math.max(-1, dot / (m1 * m2)))) * 180 / Math.PI);
+}
+
+function updateCoachingLogic(k) {
   const arm = k[15].y < k[16].y ? [11,13,15] : [12,14,16];
-  const e = getA(k[arm[0]], k[arm[1]], k[arm[2]]), kn = Math.round((getA(k[23], k[25], k[27]) + getA(k[24], k[26], k[28])) / 2);
-  const sE = e > 85 && e < 115 ? 100 : Math.max(0, 100 - Math.abs(100 - e) * 2), sK = kn > 135 && kn < 160 ? 100 : Math.max(0, 100 - Math.abs(145 - kn) * 1.5);
-  document.getElementById('v-elbow').textContent = e + '°'; document.getElementById('bar-elbow').style.width = sE + '%';
-  document.getElementById('v-knee').textContent = kn + '°'; document.getElementById('bar-knee').style.width = sK + '%';
-  const total = Math.round((sE + sK) / 2); document.getElementById('v-total').textContent = total;
-  document.getElementById('scoreRing').style.strokeDashoffset = 251 - (251 * total / 100);
+  const e = getAngle(k[arm[0]], k[arm[1]], k[arm[2]]);
+  const kn = Math.round((getAngle(k[23], k[25], k[27]) + getAngle(k[24], k[26], k[28])) / 2);
+
+  document.getElementById('v-elbow').innerHTML = `${e}°`;
+  document.getElementById('v-knee').innerHTML = `${kn}°`;
+
+  let feedback = "Hold 🙌 for 2 seconds to start recording.";
+  let score = 70;
+
+  if (e < 85) { feedback = "Tuck that elbow. You're flaring."; score -= 15; }
+  if (kn > 165) { feedback = "Get lower in your stance."; score -= 10; }
+  if (score > 80) feedback = "Form looks elite. Trigger a clip!";
+
+  document.getElementById('coachMsg').textContent = feedback;
+  document.getElementById('v-total').textContent = Math.max(0, score);
+  document.getElementById('scoreRing').style.strokeDashoffset = 251 - (251 * score / 100);
 }
 
 async function recordClip() {
-  const btn = document.getElementById('recBtn'), stat = document.getElementById('recStatus');
-  btn.disabled = true; stat.style.display = 'block';
+  const stat = document.getElementById('recStatus'), dl = document.getElementById('downloadArea');
+  stat.style.display = 'block'; dl.innerHTML = '';
   const vid = document.getElementById('vid'), recordCanvas = document.createElement('canvas');
   recordCanvas.width = vid.videoWidth; recordCanvas.height = vid.videoHeight;
   const rCtx = recordCanvas.getContext('2d');
   recordedChunks = [];
-  const stream = recordCanvas.captureStream(30);
-  recorder = new MediaRecorder(stream, { mimeType: 'video/webm;codecs=vp8' });
+  const recorder = new MediaRecorder(recordCanvas.captureStream(30), { mimeType: 'video/webm' });
   recorder.ondataavailable = (e) => { if (e.data.size > 0) recordedChunks.push(e.data); };
   recorder.onstop = () => {
-    stat.style.display = 'none'; btn.disabled = false;
-    const blob = new Blob(recordedChunks, { type: 'video/webm' });
-    const url = URL.createObjectURL(blob), a = document.createElement('a');
-    a.href = url; a.download = `Shot_${clipDuration}s_${Date.now()}.webm`; a.textContent = "⬇️ DOWNLOAD CLIP";
-    a.style.display = "block"; a.style.color = "var(--orange)"; a.style.textAlign="center";
-    document.getElementById('downloadArea').innerHTML = ''; document.getElementById('downloadArea').appendChild(a);
-    logShot();
+    stat.style.display = 'none'; isRecording = false;
+    const url = URL.createObjectURL(new Blob(recordedChunks, { type: 'video/webm' }));
+    const a = document.createElement('a'); a.href = url; a.download = `ShotForm_Remote_${Date.now()}.webm`; a.innerHTML = "💾 SAVE CLIP";
+    dl.appendChild(a);
   };
-  const draw = () => {
-    if (recorder.state === "recording") {
-      rCtx.save(); rCtx.scale(-1, 1); rCtx.drawImage(vid, -recordCanvas.width, 0, recordCanvas.width, recordCanvas.height); rCtx.restore();
-      if (currentPose) drawSkeletonSimple(rCtx, currentPose.keypoints, recordCanvas.width, recordCanvas.height);
-      requestAnimationFrame(draw);
-    }
-  };
-  recorder.start(); draw();
-  setTimeout(() => recorder.stop(), clipDuration * 1000);
+  const draw = () => { if (recorder.state === "recording") {
+    rCtx.save(); rCtx.scale(-1, 1); rCtx.drawImage(vid, -recordCanvas.width, 0, recordCanvas.width, recordCanvas.height); rCtx.restore();
+    if (currentPose) drawSkeletonSimple(rCtx, currentPose.keypoints, recordCanvas.width, recordCanvas.height);
+    requestAnimationFrame(draw);
+  }};
+  recorder.start(); draw(); setTimeout(() => recorder.stop(), 5000);
 }
 
 function drawSkeletonSimple(ctx, k, w, h) {
   const conn = [[11,12],[11,13],[13,15],[12,14],[14,16],[11,23],[12,24],[23,24],[23,25],[25,27],[24,26],[26,28]];
   ctx.strokeStyle = '#FF6B00'; ctx.lineWidth = 5;
-  conn.forEach(([i, j]) => { if (k[i].score > 0.5 && k[j].score > 0.5) { ctx.beginPath(); ctx.moveTo(w - k[i].x, k[i].y); ctx.lineTo(w - k[j].x, k[j].y); ctx.stroke(); } });
-}
-
-function logShot() {
-  const score = document.getElementById('v-total').textContent;
-  const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  const row = `<tr><td>${time}</td><td style="color:var(--orange)">${score}%</td><td>${parseInt(score)>80?'Clean':'Check Elbow'}</td></tr>`;
-  document.getElementById('logBody').innerHTML = row + document.getElementById('logBody').innerHTML;
+  conn.forEach(([i, j]) => { if (k[i].score > 0.5 && k[j].score > 0.5) { ctx.beginPath(); ctx.moveTo(w - k[i].x, k[i].y); ctx.lineTo(w - k[j].x, k[j].y); ctx.stroke(); }});
 }
 
 window.addEventListener('resize', resize);
