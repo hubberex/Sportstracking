@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SHOTFORM AI 3.9 — Gesture Remote</title>
+<title>SHOTFORM AI 4.0 — Audio & Gesture Pro</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=Inter:wght@400;700&display=swap');
 
@@ -27,7 +27,6 @@
   
   .layout { display: flex; flex: 1; overflow: hidden; }
 
-  /* VIDEO ENGINE */
   .vwrap { flex: 1; position: relative; background: #000; display: flex; align-items: center; justify-content: center; overflow: hidden; }
   video#vid { position: absolute; width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
   canvas#overlay { position: absolute; width: 100%; height: 100%; transform: scaleX(-1); z-index: 5; pointer-events: none; }
@@ -40,7 +39,6 @@
     font-size: 180px; color: var(--orange); text-shadow: 0 0 30px rgba(255,107,0,0.6);
   }
 
-  /* SIDEBAR */
   .sidebar { width: 380px; background: var(--dark); border-left: 1px solid var(--border); padding: 15px; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; }
   
   .score-sec { display: flex; flex-direction: column; align-items: center; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
@@ -49,10 +47,6 @@
   .ring-bg { fill: none; stroke: var(--border); stroke-width: 7; }
   .ring-progress { fill: none; stroke: var(--orange); stroke-width: 7; stroke-linecap: round; stroke-dasharray: 251; stroke-dashoffset: 251; transition: stroke-dashoffset 0.5s; }
   .score-text { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: 'Bebas Neue'; font-size: 28px; }
-
-  .coach-card { background: rgba(255, 107, 0, 0.1); border: 1px solid var(--orange); border-radius: 8px; padding: 12px; }
-  .coach-label { font-family: 'Bebas Neue'; font-size: 11px; color: var(--orange); margin-bottom: 4px; }
-  .coach-msg { font-size: 12px; line-height: 1.4; }
 
   .gesture-hint {
     background: var(--card); border: 1px solid var(--good); border-radius: 6px; padding: 10px;
@@ -65,8 +59,8 @@
   .stat-val { font-family: 'Bebas Neue'; font-size: 22px; color: var(--text); }
 
   .controls { margin-top: auto; display: flex; flex-direction: column; gap: 6px; padding-top: 10px; }
-  .btn { border: none; padding: 12px; border-radius: 5px; font-weight: bold; cursor: pointer; font-family: 'Inter'; font-size: 13px; background: var(--border); color: white; }
-
+  .btn-start { background: var(--orange); padding: 18px 50px; font-family: 'Bebas Neue'; font-size: 22px; border: none; cursor: pointer; border-radius: 4px; color: black; font-weight: bold; }
+  
   #downloadArea a { display: block; background: var(--good); color: black; text-decoration: none; padding: 10px; text-align: center; border-radius: 4px; font-weight: bold; font-size: 11px; margin-top: 4px; }
 
   @media (max-width: 750px) {
@@ -79,7 +73,7 @@
 <body>
 
 <header>
-  <div class="logo">SHOTFORM PRO <em>3.9</em></div>
+  <div class="logo">SHOTFORM PRO <em>4.0</em></div>
   <div id="recStatus" style="font-family: 'DM Mono'; font-size: 10px; color: var(--bad); display: none;">● RECORDING ANALYTICS</div>
 </header>
 
@@ -88,7 +82,10 @@
     <video id="vid" autoplay playsinline muted></video>
     <canvas id="overlay"></canvas>
     <div id="countdown">3</div>
-    <div id="idle"><button style="background:var(--orange); border:none; padding:15px 40px; font-family:'Bebas Neue'; font-size:20px; border-radius:4px; cursor:pointer;" onclick="startCamera()">LAUNCH ENGINE</button></div>
+    <div id="idle">
+      <button class="btn-start" id="mainLaunchBtn" onclick="launchEngine()">LAUNCH ENGINE</button>
+      <p id="loadingMsg" style="color: var(--muted); font-size: 12px; margin-top:10px; font-family:'DM Mono'; display:none;">Initializing AI Model...</p>
+    </div>
   </div>
 
   <div class="sidebar">
@@ -101,11 +98,6 @@
 
     <div class="gesture-hint" id="gestureHint">🙌 HOLD ARMS IN "V" ABOVE HEAD TO TRIGGER</div>
 
-    <div class="coach-card">
-      <div class="coach-label">PRO COACH FEEDBACK</div>
-      <div class="coach-msg" id="coachMsg">Ready for analysis. Stand back and show your full frame.</div>
-    </div>
-
     <div class="stats-grid">
       <div class="stat-box"><div class="stat-label">Elbow</div><div class="stat-val" id="v-elbow">0°</div></div>
       <div class="stat-box"><div class="stat-label">Knee</div><div class="stat-val" id="v-knee">0°</div></div>
@@ -113,7 +105,7 @@
 
     <div class="controls">
       <div id="downloadArea"></div>
-      <button class="btn" onclick="stopSession()">CLOSE ENGINE</button>
+      <button style="background:var(--border); color:white; border:none; padding:10px; border-radius:4px; cursor:pointer;" onclick="location.reload()">STOP / RESET</button>
     </div>
   </div>
 </div>
@@ -125,25 +117,48 @@
 <script>
 let detector, stream, isTracking = false, currentPose = null;
 let recorder, recordedChunks = [], isRecording = false;
-let gestureCounter = 0; // Tracks frames where V-gesture is held
+let gestureCounter = 0;
 
-async function init() {
-  detector = await poseDetection.createDetector(poseDetection.SupportedModels.BlazePose, {
-    runtime: 'mediapipe', solutionPath: 'https://cdn.jsdelivr.net/npm/@mediapipe/pose', modelType: 'full'
-  });
+// AUDIO CONTEXT for Beeps
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+function playSound(freq, type, duration) {
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = type; osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+  gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+  osc.connect(gain); gain.connect(audioCtx.destination);
+  osc.start(); osc.stop(audioCtx.currentTime + duration);
 }
 
-async function startCamera() {
+async function launchEngine() {
+  const btn = document.getElementById('mainLaunchBtn');
+  const msg = document.getElementById('loadingMsg');
+  btn.style.display = 'none';
+  msg.style.display = 'block';
+
   try {
+    // 1. Initialize AI
+    if (!detector) {
+      detector = await poseDetection.createDetector(poseDetection.SupportedModels.BlazePose, {
+        runtime: 'mediapipe', solutionPath: 'https://cdn.jsdelivr.net/npm/@mediapipe/pose', modelType: 'full'
+      });
+    }
+
+    // 2. Start Camera
     stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: 640, height: 480 }, audio: false });
-    document.getElementById('vid').srcObject = stream;
-    document.getElementById('vid').onloadedmetadata = () => {
-      document.getElementById('vid').play();
+    const vid = document.getElementById('vid');
+    vid.srcObject = stream;
+    vid.onloadedmetadata = () => {
+      vid.play();
       isTracking = true;
       document.getElementById('idle').style.display = 'none';
       resize(); loop();
     };
-  } catch (e) { alert("Camera Error"); }
+  } catch (e) {
+    alert("Error: Camera access required.");
+    btn.style.display = 'block';
+    msg.style.display = 'none';
+  }
 }
 
 function resize() {
@@ -151,8 +166,6 @@ function resize() {
   const rect = v.getBoundingClientRect();
   c.width = rect.width; c.height = rect.height;
 }
-
-function stopSession() { isTracking = false; if (stream) stream.getTracks().forEach(t => t.stop()); document.getElementById('idle').style.display = 'flex'; }
 
 async function loop() {
   if (!isTracking) return;
@@ -169,23 +182,15 @@ async function loop() {
   requestAnimationFrame(loop);
 }
 
-// ── GESTURE DETECTION ────────────────────────────────
 function checkGesture(k) {
-  // Check if both wrists are above the eyes and wider than shoulders (V-shape)
-  const leftWrist = k[15], rightWrist = k[16], leftEye = k[2], rightEye = k[5];
-  const leftShoulder = k[11], rightShoulder = k[12];
-
-  if (leftWrist.score > 0.6 && rightWrist.score > 0.6) {
-    const handsUp = leftWrist.y < leftEye.y && rightWrist.y < rightEye.y;
-    const handsWide = leftWrist.x < leftShoulder.x && rightWrist.x > rightShoulder.x;
-
-    if (handsUp && handsWide) {
+  const lw = k[15], rw = k[16], le = k[2], re = k[5], ls = k[11], rs = k[12];
+  if (lw.score > 0.6 && rw.score > 0.6) {
+    const up = lw.y < le.y && rw.y < re.y;
+    const wide = lw.x < ls.x && rw.x > rs.x;
+    if (up && wide) {
       gestureCounter++;
       document.getElementById('gestureHint').style.background = `rgba(46, 255, 154, ${gestureCounter/40})`;
-      if (gestureCounter > 40) { // Approx 1.5 - 2 seconds of holding
-        triggerCountdown();
-        gestureCounter = 0;
-      }
+      if (gestureCounter > 40) { triggerCountdown(); gestureCounter = 0; }
     } else {
       gestureCounter = 0;
       document.getElementById('gestureHint').style.background = 'var(--card)';
@@ -194,16 +199,16 @@ function checkGesture(k) {
 }
 
 async function triggerCountdown() {
-  isRecording = true; // Block double triggers
+  isRecording = true;
   const cd = document.getElementById('countdown');
   cd.style.display = 'flex';
-  
   for (let i = 3; i > 0; i--) {
     cd.textContent = i;
+    playSound(600, 'sine', 0.1); // Beep
     await new Promise(r => setTimeout(r, 1000));
   }
-  
   cd.style.display = 'none';
+  playSound(1200, 'square', 0.3); // High whistle
   recordClip();
 }
 
@@ -233,25 +238,15 @@ function updateCoachingLogic(k) {
   const arm = k[15].y < k[16].y ? [11,13,15] : [12,14,16];
   const e = getAngle(k[arm[0]], k[arm[1]], k[arm[2]]);
   const kn = Math.round((getAngle(k[23], k[25], k[27]) + getAngle(k[24], k[26], k[28])) / 2);
-
   document.getElementById('v-elbow').innerHTML = `${e}°`;
   document.getElementById('v-knee').innerHTML = `${kn}°`;
-
-  let feedback = "Hold 🙌 for 2 seconds to start recording.";
-  let score = 70;
-
-  if (e < 85) { feedback = "Tuck that elbow. You're flaring."; score -= 15; }
-  if (kn > 165) { feedback = "Get lower in your stance."; score -= 10; }
-  if (score > 80) feedback = "Form looks elite. Trigger a clip!";
-
-  document.getElementById('coachMsg').textContent = feedback;
-  document.getElementById('v-total').textContent = Math.max(0, score);
-  document.getElementById('scoreRing').style.strokeDashoffset = 251 - (251 * score / 100);
+  const total = Math.max(0, 100 - Math.abs(100 - e) - Math.abs(145 - kn)/2);
+  document.getElementById('v-total').textContent = Math.round(total);
+  document.getElementById('scoreRing').style.strokeDashoffset = 251 - (251 * total / 100);
 }
 
 async function recordClip() {
-  const stat = document.getElementById('recStatus'), dl = document.getElementById('downloadArea');
-  stat.style.display = 'block'; dl.innerHTML = '';
+  document.getElementById('recStatus').style.display = 'block';
   const vid = document.getElementById('vid'), recordCanvas = document.createElement('canvas');
   recordCanvas.width = vid.videoWidth; recordCanvas.height = vid.videoHeight;
   const rCtx = recordCanvas.getContext('2d');
@@ -259,10 +254,11 @@ async function recordClip() {
   const recorder = new MediaRecorder(recordCanvas.captureStream(30), { mimeType: 'video/webm' });
   recorder.ondataavailable = (e) => { if (e.data.size > 0) recordedChunks.push(e.data); };
   recorder.onstop = () => {
-    stat.style.display = 'none'; isRecording = false;
+    document.getElementById('recStatus').style.display = 'none'; isRecording = false;
     const url = URL.createObjectURL(new Blob(recordedChunks, { type: 'video/webm' }));
-    const a = document.createElement('a'); a.href = url; a.download = `ShotForm_Remote_${Date.now()}.webm`; a.innerHTML = "💾 SAVE CLIP";
-    dl.appendChild(a);
+    const a = document.createElement('a'); a.href = url; a.download = `ShotForm_Remote_${Date.now()}.webm`; a.innerHTML = "💾 SAVE COACHED CLIP";
+    document.getElementById('downloadArea').innerHTML = '';
+    document.getElementById('downloadArea').appendChild(a);
   };
   const draw = () => { if (recorder.state === "recording") {
     rCtx.save(); rCtx.scale(-1, 1); rCtx.drawImage(vid, -recordCanvas.width, 0, recordCanvas.width, recordCanvas.height); rCtx.restore();
@@ -279,7 +275,6 @@ function drawSkeletonSimple(ctx, k, w, h) {
 }
 
 window.addEventListener('resize', resize);
-init();
 </script>
 </body>
 </html>
