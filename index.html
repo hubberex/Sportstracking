@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SHOTFORM AI PRO — Advanced Analytics</title>
+<title>SHOTFORM AI 3.5 — Analytics Pro</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=Inter:wght@400;700&display=swap');
 
@@ -14,6 +14,8 @@
     --card: #1c1c1c;
     --border: #2a2a2a;
     --good: #2EFF9A;
+    --warn: #FFD93D;
+    --bad: #FF4455;
     --text: #ffffff;
     --muted: #888;
   }
@@ -24,9 +26,6 @@
   header { padding: 12px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: var(--dark); z-index: 30; }
   .logo { font-family: 'Bebas Neue', sans-serif; color: var(--orange); font-size: 26px; letter-spacing: 3px; }
   
-  .ai-status { font-family: 'DM Mono', monospace; font-size: 10px; display: flex; align-items: center; gap: 8px; color: var(--muted); }
-  .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--good); box-shadow: 0 0 10px var(--good); }
-
   .layout { display: flex; flex: 1; overflow: hidden; }
 
   /* VIDEO ENGINE */
@@ -35,41 +34,50 @@
   canvas#overlay { position: absolute; width: 100%; height: 100%; transform: scaleX(-1); z-index: 5; pointer-events: none; }
 
   /* SIDEBAR DASHBOARD */
-  .sidebar { width: 340px; background: var(--dark); border-left: 1px solid var(--border); padding: 20px; display: flex; flex-direction: column; gap: 15px; overflow-y: auto; }
+  .sidebar { width: 360px; background: var(--dark); border-left: 1px solid var(--border); padding: 20px; display: flex; flex-direction: column; gap: 15px; overflow-y: auto; }
   
+  /* OVERALL SCORE RING */
+  .score-sec { display: flex; flex-direction: column; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .ring-container { position: relative; width: 100px; height: 100px; }
+  .ring-svg { transform: rotate(-90deg); width: 100px; height: 100px; }
+  .ring-bg { fill: none; stroke: var(--border); stroke-width: 8; }
+  .ring-progress { fill: none; stroke: var(--orange); stroke-width: 8; stroke-linecap: round; stroke-dasharray: 283; stroke-dashoffset: 283; transition: stroke-dashoffset 0.5s; }
+  .score-text { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: 'Bebas Neue'; font-size: 32px; }
+
   .sec-title { font-family: 'Bebas Neue'; font-size: 14px; letter-spacing: 2px; color: var(--muted); margin-bottom: 5px; }
   
   .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .stat-box { background: var(--card); padding: 12px; border-radius: 8px; border: 1px solid var(--border); transition: border-color 0.3s; }
-  .stat-box.highlight { border-color: var(--orange); }
+  .stat-box { background: var(--card); padding: 12px; border-radius: 8px; border: 1px solid var(--border); position: relative; overflow: hidden; }
   .stat-label { font-size: 9px; color: var(--muted); text-transform: uppercase; font-weight: bold; margin-bottom: 4px; }
-  .stat-val { font-family: 'Bebas Neue'; font-size: 28px; color: var(--text); }
-  .stat-val span { font-size: 14px; color: var(--muted); margin-left: 2px; }
+  .stat-val { font-family: 'Bebas Neue'; font-size: 26px; color: var(--text); }
+  .stat-bar { position: absolute; bottom: 0; left: 0; height: 3px; background: var(--orange); transition: width 0.3s; }
 
-  /* ACTION BUTTONS */
-  .controls { margin-top: auto; display: flex; flex-direction: column; gap: 10px; padding-top: 20px; border-top: 1px solid var(--border); }
-  .btn { border: none; padding: 14px; border-radius: 6px; font-weight: bold; cursor: pointer; font-family: 'Inter'; display: flex; align-items: center; justify-content: center; gap: 10px; transition: 0.2s; }
+  /* SHOT LOG */
+  .log-container { flex: 1; overflow-y: auto; background: rgba(0,0,0,0.2); border-radius: 6px; padding: 10px; border: 1px solid var(--border); }
+  .log-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+  .log-table th { text-align: left; color: var(--muted); padding-bottom: 5px; border-bottom: 1px solid var(--border); }
+  .log-table td { padding: 6px 0; border-bottom: 1px solid #222; }
+
+  .controls { margin-top: auto; display: flex; flex-direction: column; gap: 10px; padding-top: 15px; }
+  .btn { border: none; padding: 14px; border-radius: 6px; font-weight: bold; cursor: pointer; font-family: 'Inter'; display: flex; align-items: center; justify-content: center; gap: 10px; }
   .btn-rec { background: #ff4444; color: white; }
   .btn-stop { background: var(--border); color: white; }
-  .btn-rec:active { transform: scale(0.98); }
-
+  
   #idle { position: absolute; inset: 0; z-index: 40; background: var(--black); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; }
-  .btn-start { background: var(--orange); padding: 18px 50px; font-family: 'Bebas Neue'; font-size: 22px; letter-spacing: 2px; border-radius: 4px; }
-
-  .badge { font-size: 10px; padding: 2px 6px; border-radius: 3px; background: rgba(46, 255, 154, 0.15); color: var(--good); font-weight: bold; }
+  .btn-start { background: var(--orange); padding: 18px 50px; font-family: 'Bebas Neue'; font-size: 22px; border-radius: 4px; border:none; cursor:pointer;}
 
   @media (max-width: 900px) {
     .layout { flex-direction: column; }
-    .sidebar { width: 100%; height: 50%; order: 2; border-left: none; }
-    .vwrap { order: 1; }
+    .sidebar { width: 100%; height: 55%; order: 2; border-left: none; }
+    .vwrap { order: 1; flex: 0.45; }
   }
 </style>
 </head>
 <body>
 
 <header>
-  <div class="logo">SHOTFORM PRO <em>3.0</em></div>
-  <div class="ai-status"><div class="status-dot"></div> BLAZEPOSE 3D ENGINE</div>
+  <div class="logo">SHOTFORM PRO <em>3.5</em></div>
+  <div id="aiStatus" style="font-family: 'DM Mono'; font-size: 10px; color: var(--good);">CALIBRATED</div>
 </header>
 
 <div class="layout">
@@ -78,51 +86,38 @@
     <canvas id="overlay"></canvas>
     
     <div id="idle">
-      <div style="width: 60px; height: 60px; border: 3px solid var(--orange); border-radius: 50%; border-top-color: transparent; animation: spin 1s linear infinite; display: none;" id="loader"></div>
-      <button class="btn-start" id="startBtn" onclick="startCamera()">START ENGINE</button>
-      <p style="color: var(--muted); font-size: 12px; font-family: 'DM Mono'">Ready for 3D Biometric Tracking</p>
+      <button class="btn-start" id="startBtn" onclick="startCamera()">START ANALYTICS</button>
     </div>
   </div>
 
   <div class="sidebar">
-    <div class="sec-title">Mechanical Biometrics</div>
-    <div class="stats-grid">
-      <div class="stat-box highlight">
-        <div class="stat-label">Shooting Elbow</div>
-        <div class="stat-val" id="v-elbow">0<span>°</span></div>
+    <div class="score-sec">
+      <div class="ring-container">
+        <svg class="ring-svg"><circle class="ring-bg" cx="50" cy="50" r="45"/><circle class="ring-progress" id="scoreRing" cx="50" cy="50" r="45"/></svg>
+        <div class="score-text" id="v-total">0</div>
       </div>
-      <div class="stat-box">
-        <div class="stat-label">Stance (Knee)</div>
-        <div class="stat-val" id="v-knee">0<span>°</span></div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-label">Hip Tilt</div>
-        <div class="stat-val" id="v-hip">0<span>°</span></div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-label">Shoulder Square</div>
-        <div class="stat-val" id="v-shoulder">0<span>°</span></div>
-      </div>
+      <div class="sec-title" style="margin-top:5px">OVERALL FORM</div>
     </div>
 
-    <div class="sec-title" style="margin-top: 10px;">Release Dynamics</div>
     <div class="stats-grid">
-      <div class="stat-box">
-        <div class="stat-label">Set Point Ht</div>
-        <div class="stat-val" id="v-height">--</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-label">Vertical Lift</div>
-        <div class="stat-val" id="v-lift"><span class="badge">ACTIVE</span></div>
-      </div>
+      <div class="stat-box"><div class="stat-label">Elbow Angle</div><div class="stat-val" id="v-elbow">0°</div><div class="stat-bar" id="bar-elbow"></div></div>
+      <div class="stat-box"><div class="stat-label">Knee Flex</div><div class="stat-val" id="v-knee">0°</div><div class="stat-bar" id="bar-knee"></div></div>
+      <div class="stat-box"><div class="stat-label">Shoulder Lv</div><div class="stat-val" id="v-shoulder">0px</div><div class="stat-bar" id="bar-shoulder"></div></div>
+      <div class="stat-box"><div class="stat-label">Hip Tilt</div><div class="stat-val" id="v-hip">0px</div><div class="stat-bar" id="bar-hip"></div></div>
+    </div>
+
+    <div class="sec-title">SHOT LOG</div>
+    <div class="log-container">
+      <table class="log-table">
+        <thead><tr><th>TIME</th><th>SCORE</th><th>WEAKNESS</th></tr></thead>
+        <tbody id="logBody"></tbody>
+      </table>
     </div>
 
     <div class="controls">
-      <button class="btn btn-rec" id="recBtn" onclick="recordThreeSeconds()" disabled>
-        <span id="recText">RECORD 3S ANALYTICS</span>
-      </button>
+      <button class="btn btn-rec" id="recBtn" onclick="recordThreeSeconds()" disabled>RECORD 3S CLIP</button>
       <button class="btn btn-stop" onclick="stopSession()">STOP CAMERA</button>
-      <div id="downloadLink" style="text-align: center; font-size: 11px;"></div>
+      <div id="downloadArea"></div>
     </div>
   </div>
 </div>
@@ -130,16 +125,15 @@
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose"></script>
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-core"></script>
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-converter"></script>
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-webgl"></script>
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/pose-detection"></script>
 
 <script>
 let detector, stream, isTracking = false;
 let recorder, recordedChunks = [];
+let currentPose = null;
 
 async function init() {
-  const model = poseDetection.SupportedModels.BlazePose;
-  detector = await poseDetection.createDetector(model, {
+  detector = await poseDetection.createDetector(poseDetection.SupportedModels.BlazePose, {
     runtime: 'mediapipe',
     solutionPath: 'https://cdn.jsdelivr.net/npm/@mediapipe/pose',
     modelType: 'full'
@@ -147,45 +141,31 @@ async function init() {
 }
 
 async function startCamera() {
-  document.getElementById('startBtn').style.display = 'none';
-  document.getElementById('loader').style.display = 'block';
-  
   try {
-    stream = await navigator.mediaDevices.getUserMedia({ 
-      video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } }, 
-      audio: false 
-    });
-    const vid = document.getElementById('vid');
-    vid.srcObject = stream;
-    vid.onloadedmetadata = () => {
-      vid.play();
+    stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: 640, height: 480 }, audio: false });
+    document.getElementById('vid').srcObject = stream;
+    document.getElementById('vid').onloadedmetadata = () => {
+      document.getElementById('vid').play();
       isTracking = true;
       document.getElementById('idle').style.display = 'none';
       document.getElementById('recBtn').disabled = false;
-      window.addEventListener('resize', resize);
       resize();
       loop();
     };
-  } catch (e) {
-    alert("Camera failed. Check permissions.");
-    location.reload();
-  }
+  } catch (e) { alert("Camera Error"); }
 }
 
 function resize() {
   const v = document.getElementById('vid');
   const c = document.getElementById('overlay');
   const rect = v.getBoundingClientRect();
-  c.width = rect.width;
-  c.height = rect.height;
+  c.width = rect.width; c.height = rect.height;
 }
 
 function stopSession() {
   isTracking = false;
   if (stream) stream.getTracks().forEach(t => t.stop());
   document.getElementById('idle').style.display = 'flex';
-  document.getElementById('startBtn').style.display = 'block';
-  document.getElementById('loader').style.display = 'none';
 }
 
 async function loop() {
@@ -195,140 +175,136 @@ async function loop() {
   const ctx = canvas.getContext('2d');
 
   const poses = await detector.estimatePoses(vid);
-  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   if (poses && poses.length > 0) {
-    const pose = poses[0];
+    currentPose = poses[0];
     const mapping = calculateMapping(vid, canvas);
-    drawSkeleton(ctx, pose.keypoints, mapping);
-    updateBasketballStats(pose.keypoints);
+    drawSkeleton(ctx, currentPose.keypoints, mapping);
+    updateAnalytics(currentPose.keypoints);
   }
   requestAnimationFrame(loop);
 }
 
 function calculateMapping(vid, canvas) {
-  const videoAspect = vid.videoWidth / vid.videoHeight;
-  const canvasAspect = canvas.width / canvas.height;
-  let scale, offsetX = 0, offsetY = 0;
-  
-  if (canvasAspect > videoAspect) {
-    scale = canvas.width / vid.videoWidth;
-    offsetY = (canvas.height - vid.videoHeight * scale) / 2;
-  } else {
-    scale = canvas.height / vid.videoHeight;
-    offsetX = (canvas.width - vid.videoWidth * scale) / 2;
-  }
-  return { scale, offsetX, offsetY };
+  const vA = vid.videoWidth / vid.videoHeight;
+  const cA = canvas.width / canvas.height;
+  let scale, oX = 0, oY = 0;
+  if (cA > vA) { scale = canvas.width / vid.videoWidth; oY = (canvas.height - vid.videoHeight * scale) / 2; }
+  else { scale = canvas.height / vid.videoHeight; oX = (canvas.width - vid.videoWidth * scale) / 2; }
+  return { scale, oX, oY };
 }
 
 function drawSkeleton(ctx, k, m) {
-  const connections = [[11,12],[11,13],[13,15],[12,14],[14,16],[11,23],[12,24],[23,24],[23,25],[25,27],[24,26],[26,28]];
-  ctx.strokeStyle = '#FF6B00';
-  ctx.lineWidth = 4;
-  ctx.lineCap = 'round';
-
-  connections.forEach(([i, j]) => {
+  const conn = [[11,12],[11,13],[13,15],[12,14],[14,16],[11,23],[12,24],[23,24],[23,25],[25,27],[24,26],[26,28]];
+  ctx.strokeStyle = '#FF6B00'; ctx.lineWidth = 4; ctx.lineCap = 'round';
+  conn.forEach(([i, j]) => {
     if (k[i].score > 0.5 && k[j].score > 0.5) {
       ctx.beginPath();
-      ctx.moveTo(k[i].x * m.scale + m.offsetX, k[i].y * m.scale + m.offsetY);
-      ctx.lineTo(k[j].x * m.scale + m.offsetX, k[j].y * m.scale + m.offsetY);
+      ctx.moveTo(k[i].x * m.scale + m.oX, k[i].y * m.scale + m.oY);
+      ctx.lineTo(k[j].x * m.scale + m.oX, k[j].y * m.scale + m.oY);
       ctx.stroke();
     }
   });
-
-  k.forEach((kp, i) => {
-    if (kp.score > 0.6 && i > 10) {
-      ctx.fillStyle = i % 2 === 0 ? '#2EFF9A' : '#FF6B00';
-      ctx.beginPath();
-      ctx.arc(kp.x * m.scale + m.offsetX, kp.y * m.scale + m.offsetY, 5, 0, Math.PI*2);
-      ctx.fill();
-    }
-  });
 }
 
-function get3DAngle(p1, p2, p3) {
-  const v1 = {x: p1.x - p2.x, y: p1.y - p2.y, z: p1.z - p2.z};
-  const v2 = {x: p3.x - p2.x, y: p3.y - p2.y, z: p3.z - p2.z};
-  const dot = v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
-  const m1 = Math.sqrt(v1.x**2 + v1.y**2 + v1.z**2);
-  const m2 = Math.sqrt(v2.x**2 + v2.y**2 + v2.z**2);
-  return Math.round(Math.acos(dot / (m1 * m2)) * 180 / Math.PI);
+function getAngle(p1, p2, p3) {
+  const v1 = {x: p1.x-p2.x, y: p1.y-p2.y, z: p1.z-p2.z};
+  const v2 = {x: p3.x-p2.x, y: p3.y-p2.y, z: p3.z-p2.z};
+  const dot = v1.x*v2.x + v1.y*v2.y + v1.z*v2.z;
+  const m1 = Math.sqrt(v1.x**2+v1.y**2+v1.z**2);
+  const m2 = Math.sqrt(v2.x**2+v2.y**2+v2.z**2);
+  return Math.round(Math.acos(dot/(m1*m2))*180/Math.PI);
 }
 
-function updateBasketballStats(k) {
-  // 1. Identify shooting arm (higher wrist)
+function updateAnalytics(k) {
+  // 1. Calculations
   const arm = k[15].y < k[16].y ? 'left' : 'right';
-  const elbowIdx = arm === 'left' ? 13 : 14;
-  const shoulderIdx = arm === 'left' ? 11 : 12;
-  const wristIdx = arm === 'left' ? 15 : 16;
+  const eIdx = arm === 'left' ? [11,13,15] : [12,14,16];
+  const elbow = getAngle(k[eIdx[0]], k[eIdx[1]], k[eIdx[2]]);
+  const knee = Math.round((getAngle(k[23], k[25], k[27]) + getAngle(k[24], k[26], k[28])) / 2);
+  const shoulder = Math.abs(Math.round(k[11].y - k[12].y));
+  const hip = Math.abs(Math.round(k[23].y - k[24].y));
 
-  // Elbow Angle
-  if(k[wristIdx].score > 0.5) {
-    const eAngle = get3DAngle(k[shoulderIdx], k[elbowIdx], k[wristIdx]);
-    document.getElementById('v-elbow').innerHTML = `${eAngle}<span>°</span>`;
-  }
+  // 2. Individual Scores (0-100)
+  const sElbow = elbow > 85 && elbow < 115 ? 100 : Math.max(0, 100 - Math.abs(100 - elbow) * 2);
+  const sKnee = knee > 135 && knee < 160 ? 100 : Math.max(0, 100 - Math.abs(145 - knee) * 1.5);
+  const sShoulder = Math.max(0, 100 - shoulder * 4);
+  const sHip = Math.max(0, 100 - hip * 4);
 
-  // Knee Angle (Average)
-  const kAngle = Math.round((get3DAngle(k[23], k[25], k[27]) + get3DAngle(k[24], k[26], k[28])) / 2);
-  document.getElementById('v-knee').innerHTML = `${kAngle}<span>°</span>`;
+  // 3. UI Update
+  document.getElementById('v-elbow').textContent = elbow + '°';
+  document.getElementById('bar-elbow').style.width = sElbow + '%';
+  document.getElementById('v-knee').textContent = knee + '°';
+  document.getElementById('bar-knee').style.width = sKnee + '%';
+  document.getElementById('v-shoulder').textContent = shoulder + 'px';
+  document.getElementById('bar-shoulder').style.width = sShoulder + '%';
+  document.getElementById('v-hip').textContent = hip + 'px';
+  document.getElementById('bar-hip').style.width = sHip + '%';
 
-  // Hip Tilt (Difference in Y)
-  const hipTilt = Math.abs(Math.round(k[23].y - k[24].y));
-  document.getElementById('v-hip').innerHTML = `${hipTilt}<span>px</span>`;
-
-  // Shoulder Squareness
-  const shDiff = Math.abs(Math.round(k[11].y - k[12].y));
-  document.getElementById('v-shoulder').innerHTML = `${shDiff}<span>px</span>`;
-
-  // Height of release relative to nose (Set Point)
-  const setPoint = Math.round(k[0].y - k[wristIdx].y);
-  document.getElementById('v-height').innerHTML = setPoint > 0 ? `HIGH` : `LOW`;
+  const total = Math.round((sElbow + sKnee + sShoulder + sHip) / 4);
+  document.getElementById('v-total').textContent = total;
+  document.getElementById('scoreRing').style.strokeDashoffset = 283 - (283 * total / 100);
+  
+  // Color the ring based on score
+  const color = total > 80 ? 'var(--good)' : total > 50 ? 'var(--warn)' : 'var(--bad)';
+  document.getElementById('scoreRing').style.stroke = color;
 }
 
-// ── RECORDING ENGINE ────────────────────────────────
+// ── ROBUST VIDEO RECORDING ────────────────────────────
 async function recordThreeSeconds() {
   const btn = document.getElementById('recBtn');
   btn.disabled = true;
-  document.getElementById('recText').textContent = "REC... (3S)";
-  
-  const recordCanvas = document.createElement('canvas');
+  btn.textContent = "RECORDING...";
+
   const vid = document.getElementById('vid');
+  const recordCanvas = document.createElement('canvas');
   recordCanvas.width = vid.videoWidth;
   recordCanvas.height = vid.videoHeight;
   const rCtx = recordCanvas.getContext('2d');
 
   recordedChunks = [];
-  const recStream = recordCanvas.captureStream(30);
-  recorder = new MediaRecorder(recStream, { mimeType: 'video/webm' });
-  recorder.ondataavailable = (e) => recordedChunks.push(e.data);
-  recorder.onstop = saveVideo;
+  // Use 'video/webm;codecs=vp8' for best cross-browser compatibility
+  const stream = recordCanvas.captureStream(30);
+  recorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
 
-  const renderFrame = async () => {
+  recorder.ondataavailable = (e) => { if (e.data.size > 0) recordedChunks.push(e.data); };
+  recorder.onstop = () => {
+    saveShotToLog();
+    const blob = new Blob(recordedChunks, { type: 'video/webm' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `Shot_${Date.now()}.webm`; a.textContent = "⬇️ SAVE LAST CLIP";
+    a.style.display = "block"; a.style.color = "var(--orange)"; a.style.marginTop = "10px"; a.style.textAlign="center";
+    document.getElementById('downloadArea').innerHTML = '';
+    document.getElementById('downloadArea').appendChild(a);
+    btn.disabled = false; btn.textContent = "RECORD 3S CLIP";
+  };
+
+  const drawFrame = () => {
     if (recorder.state === "recording") {
+      // Draw Mirrored Video
       rCtx.save();
       rCtx.scale(-1, 1);
       rCtx.drawImage(vid, -recordCanvas.width, 0, recordCanvas.width, recordCanvas.height);
       rCtx.restore();
-      const poses = await detector.estimatePoses(vid);
-      if (poses.length > 0) {
-        drawSkeletonSimple(rCtx, poses[0].keypoints, recordCanvas.width, recordCanvas.height);
+
+      // Draw Skeleton on top
+      if (currentPose) {
+        drawSkeletonSimple(rCtx, currentPose.keypoints, recordCanvas.width, recordCanvas.height);
       }
-      requestAnimationFrame(renderFrame);
+      requestAnimationFrame(drawFrame);
     }
   };
 
   recorder.start();
-  renderFrame();
-  setTimeout(() => {
-    recorder.stop();
-    btn.disabled = false;
-    document.getElementById('recText').textContent = "RECORD 3S ANALYTICS";
-  }, 3000);
+  drawFrame();
+  setTimeout(() => recorder.stop(), 3000);
 }
 
 function drawSkeletonSimple(ctx, k, w, h) {
-  ctx.strokeStyle = '#FF6B00'; ctx.lineWidth = 6;
   const conn = [[11,12],[11,13],[13,15],[12,14],[14,16],[11,23],[12,24],[23,24],[23,25],[25,27],[24,26],[26,28]];
+  ctx.strokeStyle = '#FF6B00'; ctx.lineWidth = 5;
   conn.forEach(([i, j]) => {
     if (k[i].score > 0.5 && k[j].score > 0.5) {
       ctx.beginPath();
@@ -339,18 +315,25 @@ function drawSkeletonSimple(ctx, k, w, h) {
   });
 }
 
-function saveVideo() {
-  const blob = new Blob(recordedChunks, { type: 'video/webm' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `ShotForm_Analysis_${Date.now()}.webm`;
-  a.textContent = "⬇️ DOWNLOAD LATEST ANALYSIS";
-  a.style.color = "var(--good)";
-  document.getElementById('downloadLink').innerHTML = '';
-  document.getElementById('downloadLink').appendChild(a);
+function saveShotToLog() {
+  const score = document.getElementById('v-total').textContent;
+  const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  const row = document.createElement('tr');
+  row.innerHTML = `<td>${time}</td><td style="color:var(--orange)">${score}%</td><td>${getWeakness()}</td>`;
+  document.getElementById('logBody').prepend(row);
 }
 
+function getWeakness() {
+  const e = parseInt(document.getElementById('bar-elbow').style.width);
+  const k = parseInt(document.getElementById('bar-knee').style.width);
+  const s = parseInt(document.getElementById('bar-shoulder').style.width);
+  if (e < 70) return "Elbow";
+  if (k < 70) return "Leg Power";
+  if (s < 70) return "Balance";
+  return "Perfect";
+}
+
+window.addEventListener('resize', resize);
 init();
 </script>
 </body>
