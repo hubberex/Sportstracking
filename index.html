@@ -3,55 +3,64 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SHOTFORM AI — Pro Video Capture</title>
+<title>SHOTFORM AI PRO — Advanced Analytics</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=Inter:wght@400;700&display=swap');
 
   :root {
     --orange: #FF6B00;
     --black: #080808;
     --dark: #121212;
-    --border: #222;
+    --card: #1c1c1c;
+    --border: #2a2a2a;
     --good: #2EFF9A;
+    --text: #ffffff;
+    --muted: #888;
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { background: var(--black); color: #fff; font-family: sans-serif; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+  body { background: var(--black); color: var(--text); font-family: 'Inter', sans-serif; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
 
-  header { padding: 15px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-  .logo { font-family: 'Bebas Neue', sans-serif; color: var(--orange); font-size: 24px; letter-spacing: 2px; }
+  header { padding: 12px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: var(--dark); z-index: 30; }
+  .logo { font-family: 'Bebas Neue', sans-serif; color: var(--orange); font-size: 26px; letter-spacing: 3px; }
+  
+  .ai-status { font-family: 'DM Mono', monospace; font-size: 10px; display: flex; align-items: center; gap: 8px; color: var(--muted); }
+  .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--good); box-shadow: 0 0 10px var(--good); }
 
-  .layout { display: flex; flex: 1; position: relative; overflow: hidden; }
-  
-  /* VIDEO CONTAINER */
-  .vwrap { flex: 1; position: relative; background: #000; display: flex; align-items: center; justify-content: center; }
-  
+  .layout { display: flex; flex: 1; overflow: hidden; }
+
+  /* VIDEO ENGINE */
+  .vwrap { flex: 1; position: relative; background: #000; display: flex; align-items: center; justify-content: center; overflow: hidden; }
   video#vid { position: absolute; width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
   canvas#overlay { position: absolute; width: 100%; height: 100%; transform: scaleX(-1); z-index: 5; pointer-events: none; }
 
-  /* SIDEBAR */
-  .sidebar { width: 300px; background: var(--dark); border-left: 1px solid var(--border); padding: 20px; display: flex; flex-direction: column; gap: 20px; }
+  /* SIDEBAR DASHBOARD */
+  .sidebar { width: 340px; background: var(--dark); border-left: 1px solid var(--border); padding: 20px; display: flex; flex-direction: column; gap: 15px; overflow-y: auto; }
   
-  .btn-rec { 
-    background: #ff4444; color: white; border: none; padding: 15px; 
-    border-radius: 50px; font-weight: bold; cursor: pointer; 
-    display: flex; align-items: center; justify-content: center; gap: 10px;
-    box-shadow: 0 0 15px rgba(255, 68, 68, 0.4);
-  }
-  .btn-rec:disabled { opacity: 0.5; cursor: not-allowed; filter: grayscale(1); }
-  .rec-dot { width: 10px; height: 10px; background: white; border-radius: 50%; animation: blink 1s infinite; }
-
-  #idle { position: absolute; inset: 0; z-index: 20; background: var(--black); display: flex; flex-direction: column; align-items: center; justify-content: center; }
-  .btn-start { background: var(--orange); border: none; padding: 15px 40px; font-family: 'Bebas Neue'; font-size: 20px; border-radius: 5px; cursor: pointer; }
-
-  .stat-card { background: #1a1a1a; padding: 15px; border-radius: 8px; border: 1px solid var(--border); }
-  .stat-val { font-family: 'Bebas Neue'; font-size: 32px; color: var(--orange); }
-
-  @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+  .sec-title { font-family: 'Bebas Neue'; font-size: 14px; letter-spacing: 2px; color: var(--muted); margin-bottom: 5px; }
   
-  @media (max-width: 800px) {
+  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .stat-box { background: var(--card); padding: 12px; border-radius: 8px; border: 1px solid var(--border); transition: border-color 0.3s; }
+  .stat-box.highlight { border-color: var(--orange); }
+  .stat-label { font-size: 9px; color: var(--muted); text-transform: uppercase; font-weight: bold; margin-bottom: 4px; }
+  .stat-val { font-family: 'Bebas Neue'; font-size: 28px; color: var(--text); }
+  .stat-val span { font-size: 14px; color: var(--muted); margin-left: 2px; }
+
+  /* ACTION BUTTONS */
+  .controls { margin-top: auto; display: flex; flex-direction: column; gap: 10px; padding-top: 20px; border-top: 1px solid var(--border); }
+  .btn { border: none; padding: 14px; border-radius: 6px; font-weight: bold; cursor: pointer; font-family: 'Inter'; display: flex; align-items: center; justify-content: center; gap: 10px; transition: 0.2s; }
+  .btn-rec { background: #ff4444; color: white; }
+  .btn-stop { background: var(--border); color: white; }
+  .btn-rec:active { transform: scale(0.98); }
+
+  #idle { position: absolute; inset: 0; z-index: 40; background: var(--black); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; }
+  .btn-start { background: var(--orange); padding: 18px 50px; font-family: 'Bebas Neue'; font-size: 22px; letter-spacing: 2px; border-radius: 4px; }
+
+  .badge { font-size: 10px; padding: 2px 6px; border-radius: 3px; background: rgba(46, 255, 154, 0.15); color: var(--good); font-weight: bold; }
+
+  @media (max-width: 900px) {
     .layout { flex-direction: column; }
-    .sidebar { width: 100%; height: auto; order: 2; border-left: none; border-top: 1px solid var(--border); }
+    .sidebar { width: 100%; height: 50%; order: 2; border-left: none; }
     .vwrap { order: 1; }
   }
 </style>
@@ -59,8 +68,8 @@
 <body>
 
 <header>
-  <div class="logo">SHOTFORM PRO</div>
-  <div id="status" style="font-family: 'DM Mono'; font-size: 10px; color: #555;">AI INITIALIZING...</div>
+  <div class="logo">SHOTFORM PRO <em>3.0</em></div>
+  <div class="ai-status"><div class="status-dot"></div> BLAZEPOSE 3D ENGINE</div>
 </header>
 
 <div class="layout">
@@ -69,26 +78,52 @@
     <canvas id="overlay"></canvas>
     
     <div id="idle">
-      <button class="btn-start" onclick="startCamera()">START SESSION</button>
+      <div style="width: 60px; height: 60px; border: 3px solid var(--orange); border-radius: 50%; border-top-color: transparent; animation: spin 1s linear infinite; display: none;" id="loader"></div>
+      <button class="btn-start" id="startBtn" onclick="startCamera()">START ENGINE</button>
+      <p style="color: var(--muted); font-size: 12px; font-family: 'DM Mono'">Ready for 3D Biometric Tracking</p>
     </div>
   </div>
 
   <div class="sidebar">
-    <button class="btn-rec" id="recBtn" onclick="recordThreeSeconds()" disabled>
-      <div class="rec-dot"></div> RECORD 3S CLIP
-    </button>
-
-    <div class="stat-card">
-      <div style="font-size: 10px; color: #888;">ELBOW ANGLE</div>
-      <div class="stat-val" id="a-elbow">0°</div>
+    <div class="sec-title">Mechanical Biometrics</div>
+    <div class="stats-grid">
+      <div class="stat-box highlight">
+        <div class="stat-label">Shooting Elbow</div>
+        <div class="stat-val" id="v-elbow">0<span>°</span></div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Stance (Knee)</div>
+        <div class="stat-val" id="v-knee">0<span>°</span></div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Hip Tilt</div>
+        <div class="stat-val" id="v-hip">0<span>°</span></div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Shoulder Square</div>
+        <div class="stat-val" id="v-shoulder">0<span>°</span></div>
+      </div>
     </div>
 
-    <div class="stat-card">
-      <div style="font-size: 10px; color: #888;">KNEE ANGLE</div>
-      <div class="stat-val" id="a-knee">0°</div>
+    <div class="sec-title" style="margin-top: 10px;">Release Dynamics</div>
+    <div class="stats-grid">
+      <div class="stat-box">
+        <div class="stat-label">Set Point Ht</div>
+        <div class="stat-val" id="v-height">--</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Vertical Lift</div>
+        <div class="stat-val" id="v-lift"><span class="badge">ACTIVE</span></div>
+      </div>
     </div>
 
-    <div id="downloadArea"></div>
+    <div class="controls">
+      <button class="btn btn-rec" id="recBtn" onclick="recordThreeSeconds()" disabled>
+        <span id="recText">RECORD 3S ANALYTICS</span>
+      </button>
+      <button class="btn btn-stop" onclick="stopSession()">STOP CAMERA</button>
+      <div id="downloadLink" style="text-align: center; font-size: 11px;"></div>
+    </div>
   </div>
 </div>
 
@@ -107,27 +142,34 @@ async function init() {
   detector = await poseDetection.createDetector(model, {
     runtime: 'mediapipe',
     solutionPath: 'https://cdn.jsdelivr.net/npm/@mediapipe/pose',
-    separateSegmentationMask: false,
     modelType: 'full'
   });
-  document.getElementById('status').textContent = 'BLAZEPOSE ACTIVE';
 }
 
 async function startCamera() {
-  stream = await navigator.mediaDevices.getUserMedia({ 
-    video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } }, 
-    audio: false 
-  });
-  const vid = document.getElementById('vid');
-  vid.srcObject = stream;
-  vid.onloadedmetadata = () => {
-    vid.play();
-    isTracking = true;
-    document.getElementById('idle').style.display = 'none';
-    document.getElementById('recBtn').disabled = false;
-    resize();
-    loop();
-  };
+  document.getElementById('startBtn').style.display = 'none';
+  document.getElementById('loader').style.display = 'block';
+  
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ 
+      video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } }, 
+      audio: false 
+    });
+    const vid = document.getElementById('vid');
+    vid.srcObject = stream;
+    vid.onloadedmetadata = () => {
+      vid.play();
+      isTracking = true;
+      document.getElementById('idle').style.display = 'none';
+      document.getElementById('recBtn').disabled = false;
+      window.addEventListener('resize', resize);
+      resize();
+      loop();
+    };
+  } catch (e) {
+    alert("Camera failed. Check permissions.");
+    location.reload();
+  }
 }
 
 function resize() {
@@ -136,6 +178,14 @@ function resize() {
   const rect = v.getBoundingClientRect();
   c.width = rect.width;
   c.height = rect.height;
+}
+
+function stopSession() {
+  isTracking = false;
+  if (stream) stream.getTracks().forEach(t => t.stop());
+  document.getElementById('idle').style.display = 'flex';
+  document.getElementById('startBtn').style.display = 'block';
+  document.getElementById('loader').style.display = 'none';
 }
 
 async function loop() {
@@ -149,20 +199,16 @@ async function loop() {
 
   if (poses && poses.length > 0) {
     const pose = poses[0];
-    drawAccuratePose(ctx, pose.keypoints, canvas);
-    updateAngles(pose.keypoints);
+    const mapping = calculateMapping(vid, canvas);
+    drawSkeleton(ctx, pose.keypoints, mapping);
+    updateBasketballStats(pose.keypoints);
   }
   requestAnimationFrame(loop);
 }
 
-// ── ACCURATE MAPPING ──────────────────────────────────
-function drawAccuratePose(ctx, keypoints, canvas) {
-  const vid = document.getElementById('vid');
-  
-  // Calculate Scaling to account for "Object-Fit: Cover"
+function calculateMapping(vid, canvas) {
   const videoAspect = vid.videoWidth / vid.videoHeight;
   const canvasAspect = canvas.width / canvas.height;
-  
   let scale, offsetX = 0, offsetY = 0;
   
   if (canvasAspect > videoAspect) {
@@ -172,54 +218,79 @@ function drawAccuratePose(ctx, keypoints, canvas) {
     scale = canvas.height / vid.videoHeight;
     offsetX = (canvas.width - vid.videoWidth * scale) / 2;
   }
+  return { scale, offsetX, offsetY };
+}
 
+function drawSkeleton(ctx, k, m) {
   const connections = [[11,12],[11,13],[13,15],[12,14],[14,16],[11,23],[12,24],[23,24],[23,25],[25,27],[24,26],[26,28]];
-
   ctx.strokeStyle = '#FF6B00';
   ctx.lineWidth = 4;
   ctx.lineCap = 'round';
 
   connections.forEach(([i, j]) => {
-    const kp1 = keypoints[i];
-    const kp2 = keypoints[j];
-    if (kp1.score > 0.5 && kp2.score > 0.5) {
+    if (k[i].score > 0.5 && k[j].score > 0.5) {
       ctx.beginPath();
-      ctx.moveTo(kp1.x * scale + offsetX, kp1.y * scale + offsetY);
-      ctx.lineTo(kp2.x * scale + offsetX, kp2.y * scale + offsetY);
+      ctx.moveTo(k[i].x * m.scale + m.offsetX, k[i].y * m.scale + m.offsetY);
+      ctx.lineTo(k[j].x * m.scale + m.offsetX, k[j].y * m.scale + m.offsetY);
       ctx.stroke();
     }
   });
 
-  keypoints.forEach((kp, i) => {
-    if (kp.score > 0.5 && i > 10) {
-      ctx.fillStyle = '#2EFF9A';
+  k.forEach((kp, i) => {
+    if (kp.score > 0.6 && i > 10) {
+      ctx.fillStyle = i % 2 === 0 ? '#2EFF9A' : '#FF6B00';
       ctx.beginPath();
-      ctx.arc(kp.x * scale + offsetX, kp.y * scale + offsetY, 5, 0, Math.PI*2);
+      ctx.arc(kp.x * m.scale + m.offsetX, kp.y * m.scale + m.offsetY, 5, 0, Math.PI*2);
       ctx.fill();
     }
   });
 }
 
-function updateAngles(k) {
-  const getA = (p1, p2, p3) => {
-    const v1 = {x:p1.x-p2.x, y:p1.y-p2.y, z:p1.z-p2.z};
-    const v2 = {x:p3.x-p2.x, y:p3.y-p2.y, z:p3.z-p2.z};
-    const dot = v1.x*v2.x + v1.y*v2.y + v1.z*v2.z;
-    const m1 = Math.sqrt(v1.x**2+v1.y**2+v1.z**2);
-    const m2 = Math.sqrt(v2.x**2+v2.y**2+v2.z**2);
-    return Math.round(Math.acos(dot/(m1*m2))*180/Math.PI);
-  };
-  if(k[15].score > 0.5) document.getElementById('a-elbow').textContent = getA(k[11], k[13], k[15]) + '°';
-  if(k[27].score > 0.5) document.getElementById('a-knee').textContent = getA(k[23], k[25], k[27]) + '°';
+function get3DAngle(p1, p2, p3) {
+  const v1 = {x: p1.x - p2.x, y: p1.y - p2.y, z: p1.z - p2.z};
+  const v2 = {x: p3.x - p2.x, y: p3.y - p2.y, z: p3.z - p2.z};
+  const dot = v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
+  const m1 = Math.sqrt(v1.x**2 + v1.y**2 + v1.z**2);
+  const m2 = Math.sqrt(v2.x**2 + v2.y**2 + v2.z**2);
+  return Math.round(Math.acos(dot / (m1 * m2)) * 180 / Math.PI);
 }
 
-// ── VIDEO RECORDING (3 SECONDS) ───────────────────────
+function updateBasketballStats(k) {
+  // 1. Identify shooting arm (higher wrist)
+  const arm = k[15].y < k[16].y ? 'left' : 'right';
+  const elbowIdx = arm === 'left' ? 13 : 14;
+  const shoulderIdx = arm === 'left' ? 11 : 12;
+  const wristIdx = arm === 'left' ? 15 : 16;
+
+  // Elbow Angle
+  if(k[wristIdx].score > 0.5) {
+    const eAngle = get3DAngle(k[shoulderIdx], k[elbowIdx], k[wristIdx]);
+    document.getElementById('v-elbow').innerHTML = `${eAngle}<span>°</span>`;
+  }
+
+  // Knee Angle (Average)
+  const kAngle = Math.round((get3DAngle(k[23], k[25], k[27]) + get3DAngle(k[24], k[26], k[28])) / 2);
+  document.getElementById('v-knee').innerHTML = `${kAngle}<span>°</span>`;
+
+  // Hip Tilt (Difference in Y)
+  const hipTilt = Math.abs(Math.round(k[23].y - k[24].y));
+  document.getElementById('v-hip').innerHTML = `${hipTilt}<span>px</span>`;
+
+  // Shoulder Squareness
+  const shDiff = Math.abs(Math.round(k[11].y - k[12].y));
+  document.getElementById('v-shoulder').innerHTML = `${shDiff}<span>px</span>`;
+
+  // Height of release relative to nose (Set Point)
+  const setPoint = Math.round(k[0].y - k[wristIdx].y);
+  document.getElementById('v-height').innerHTML = setPoint > 0 ? `HIGH` : `LOW`;
+}
+
+// ── RECORDING ENGINE ────────────────────────────────
 async function recordThreeSeconds() {
   const btn = document.getElementById('recBtn');
   btn.disabled = true;
-  btn.innerHTML = `<div class="rec-dot"></div> RECORDING...`;
+  document.getElementById('recText').textContent = "REC... (3S)";
   
-  // Create a hidden canvas to merge video + skeleton
   const recordCanvas = document.createElement('canvas');
   const vid = document.getElementById('vid');
   recordCanvas.width = vid.videoWidth;
@@ -227,68 +298,59 @@ async function recordThreeSeconds() {
   const rCtx = recordCanvas.getContext('2d');
 
   recordedChunks = [];
-  const stream = recordCanvas.captureStream(30); // 30 FPS
-  recorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
+  const recStream = recordCanvas.captureStream(30);
+  recorder = new MediaRecorder(recStream, { mimeType: 'video/webm' });
+  recorder.ondataavailable = (e) => recordedChunks.push(e.data);
+  recorder.onstop = saveVideo;
 
-  recorder.ondataavailable = (e) => { if (e.data.size > 0) recordedChunks.push(e.data); };
-  recorder.onstop = exportVideo;
-
-  // Drawing loop for the recorder
-  const drawToRecord = async () => {
+  const renderFrame = async () => {
     if (recorder.state === "recording") {
-      // 1. Draw Video Frame
       rCtx.save();
       rCtx.scale(-1, 1);
       rCtx.drawImage(vid, -recordCanvas.width, 0, recordCanvas.width, recordCanvas.height);
       rCtx.restore();
-
-      // 2. Overlay Skeleton (using AI coords directly)
       const poses = await detector.estimatePoses(vid);
       if (poses.length > 0) {
-        drawSkeletonForRecord(rCtx, poses[0].keypoints, recordCanvas.width, recordCanvas.height);
+        drawSkeletonSimple(rCtx, poses[0].keypoints, recordCanvas.width, recordCanvas.height);
       }
-      requestAnimationFrame(drawToRecord);
+      requestAnimationFrame(renderFrame);
     }
   };
 
   recorder.start();
-  drawToRecord();
-
+  renderFrame();
   setTimeout(() => {
     recorder.stop();
     btn.disabled = false;
-    btn.innerHTML = `<div class="rec-dot"></div> RECORD 3S CLIP`;
+    document.getElementById('recText').textContent = "RECORD 3S ANALYTICS";
   }, 3000);
 }
 
-function drawSkeletonForRecord(ctx, kp, w, h) {
+function drawSkeletonSimple(ctx, k, w, h) {
   ctx.strokeStyle = '#FF6B00'; ctx.lineWidth = 6;
-  const connections = [[11,12],[11,13],[13,15],[12,14],[14,16],[11,23],[12,24],[23,24],[23,25],[25,27],[24,26],[26,28]];
-  connections.forEach(([i, j]) => {
-    if (kp[i].score > 0.5 && kp[j].score > 0.5) {
+  const conn = [[11,12],[11,13],[13,15],[12,14],[14,16],[11,23],[12,24],[23,24],[23,25],[25,27],[24,26],[26,28]];
+  conn.forEach(([i, j]) => {
+    if (k[i].score > 0.5 && k[j].score > 0.5) {
       ctx.beginPath();
-      ctx.moveTo(w - kp[i].x, kp[i].y); // Mirroring back for recording
-      ctx.lineTo(w - kp[j].x, kp[j].y);
+      ctx.moveTo(w - k[i].x, k[i].y);
+      ctx.lineTo(w - k[j].x, k[j].y);
       ctx.stroke();
     }
   });
 }
 
-function exportVideo() {
+function saveVideo() {
   const blob = new Blob(recordedChunks, { type: 'video/webm' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  a.style.display = 'block';
-  a.style.marginTop = '10px';
-  a.style.color = 'var(--good)';
   a.href = url;
-  a.download = `shotform_clip_${Date.now()}.webm`;
-  a.textContent = "⬇️ DOWNLOAD LAST CLIP";
-  document.getElementById('downloadArea').innerHTML = '';
-  document.getElementById('downloadArea').appendChild(a);
+  a.download = `ShotForm_Analysis_${Date.now()}.webm`;
+  a.textContent = "⬇️ DOWNLOAD LATEST ANALYSIS";
+  a.style.color = "var(--good)";
+  document.getElementById('downloadLink').innerHTML = '';
+  document.getElementById('downloadLink').appendChild(a);
 }
 
-window.addEventListener('resize', resize);
 init();
 </script>
 </body>
