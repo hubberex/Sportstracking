@@ -1,0 +1,1123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>SHOTFORM AI</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap');
+
+:root {
+  --orange: #FF6B00;
+  --black: #090909;
+  --dark: #111;
+  --mid: #1a1a1a;
+  --card: #202020;
+  --border: #2a2a2a;
+  --text: #eee;
+  --muted: #555;
+  --good: #2EFF9A;
+  --warn: #FFD93D;
+  --bad: #FF4455;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+
+body {
+  background: var(--black);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* --- HEADER ------------------------------- */
+header {
+  position: sticky; top: 0; z-index: 50;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 18px;
+  background: var(--dark);
+  border-bottom: 1px solid var(--border);
+}
+.logo { font-family:'Bebas Neue',sans-serif; font-size:22px; letter-spacing:4px; color:var(--orange); }
+.logo em { color:var(--text); font-style:normal; }
+.hdr-r { display:flex; align-items:center; gap:10px; }
+.pill {
+  display:flex; align-items:center; gap:6px;
+  font-family:'DM Mono',monospace; font-size:10px; color:var(--muted);
+  padding:4px 10px; border:1px solid var(--border); border-radius:20px;
+}
+.dot { width:7px; height:7px; border-radius:50%; background:var(--muted); }
+.dot.loading { background:var(--warn); animation:blink .8s infinite; }
+.dot.ready   { background:var(--good); }
+.dot.live    { background:var(--orange); animation:blink 1s infinite; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.2} }
+.timer { font-family:'Bebas Neue',sans-serif; font-size:18px; letter-spacing:3px; }
+
+/* --- CAMERA SECTION ----------------------- */
+.cam-section { position:relative; background:#060606; }
+
+.cam-wrap {
+  position:relative;
+  width:100%;
+  padding-top: 75%; /* 4:3 ratio */
+  background:#060606;
+  overflow:hidden;
+}
+
+video, canvas#overlay {
+  position:absolute; inset:0;
+  width:100%; height:100%;
+  object-fit:cover;
+  transform:scaleX(-1);
+  display:none;
+}
+
+/* IDLE */
+#idle {
+  position:absolute; inset:0;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:18px; padding:24px; text-align:center;
+  background: radial-gradient(ellipse at 50% 60%, rgba(255,107,0,0.07) 0%, transparent 70%);
+}
+#idle.off { display:none; }
+
+.bball {
+  width:70px; height:70px; border-radius:50%;
+  background: radial-gradient(circle at 36% 34%, #ff9a44, #ff6b00 55%, #8b3800);
+  box-shadow:0 0 36px rgba(255,107,0,.4);
+  animation: float 3s ease-in-out infinite;
+  flex-shrink:0;
+}
+@keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+
+#idle h2 { font-family:'Bebas Neue',sans-serif; font-size:28px; letter-spacing:3px; }
+#idle p  { color:var(--muted); font-size:13px; line-height:1.6; max-width:280px; }
+
+.ai-note {
+  font-family:'DM Mono',monospace; font-size:10px; color:#444;
+  line-height:1.6; padding:8px 14px;
+  border:1px solid #222; border-radius:5px; max-width:280px;
+}
+
+/* HUD */
+#hud { position:absolute; inset:0; pointer-events:none; display:none; }
+#hud.on { display:block; }
+.corner { position:absolute; width:18px; height:18px; border-color:var(--orange); border-style:solid; opacity:.6; }
+.corner.tl { top:12px; left:12px; border-width:2px 0 0 2px; }
+.corner.tr { top:12px; right:12px; border-width:2px 2px 0 0; }
+.corner.bl { bottom:12px; left:12px; border-width:0 0 2px 2px; }
+.corner.br { bottom:12px; right:12px; border-width:0 2px 2px 0; }
+.live-tag {
+  position:absolute; top:12px; left:50%; transform:translateX(-50%);
+  display:flex; align-items:center; gap:6px;
+  background:rgba(0,0,0,.72); padding:4px 12px; border-radius:20px;
+  font-family:'DM Mono',monospace; font-size:10px; color:var(--bad);
+}
+.conf-tag {
+  position:absolute; bottom:10px; left:50%; transform:translateX(-50%);
+  background:rgba(0,0,0,.72); padding:4px 12px; border-radius:20px;
+  font-family:'DM Mono',monospace; font-size:9px; color:var(--muted);
+  white-space:nowrap;
+}
+
+/* --- CAPTURE BUTTON BAR ------------------- */
+.capture-bar {
+  display:flex; align-items:center; justify-content:center;
+  gap:12px; padding:14px 18px;
+  background:var(--dark); border-bottom:1px solid var(--border);
+}
+
+.btn-start {
+  width:100%; max-width:320px;
+  background:var(--orange); color:#000; border:none;
+  padding:15px; border-radius:8px;
+  font-family:'Bebas Neue',sans-serif; font-size:22px; letter-spacing:3px;
+  cursor:pointer; box-shadow:0 4px 22px rgba(255,107,0,.4);
+  transition:all .15s;
+}
+.btn-start:active { transform:scale(.97); }
+.btn-start:disabled { opacity:.35; cursor:default; transform:none; }
+
+.btn-cap {
+  flex:1; max-width:220px;
+  background:var(--orange); color:#000; border:none;
+  padding:14px; border-radius:8px;
+  font-family:'Bebas Neue',sans-serif; font-size:18px; letter-spacing:2px;
+  cursor:pointer; box-shadow:0 4px 18px rgba(255,107,0,.35);
+  transition:all .15s;
+}
+.btn-cap:active { transform:scale(.96); }
+.btn-cap:disabled { opacity:.35; cursor:default; transform:none; }
+
+.btn-sm {
+  background:var(--mid); border:1px solid var(--border); color:var(--text);
+  padding:12px 16px; border-radius:8px;
+  font-family:'DM Mono',monospace; font-size:11px; letter-spacing:1px;
+  cursor:pointer; transition:all .15s; white-space:nowrap;
+}
+.btn-sm:active { background:var(--card); }
+
+/* --- LIVE SCORES (horizontal pill row) ---- */
+.scores-bar {
+  display:flex; gap:10px; padding:14px 16px;
+  overflow-x:auto; border-bottom:1px solid var(--border);
+  -webkit-overflow-scrolling:touch;
+}
+.scores-bar::-webkit-scrollbar { display:none; }
+
+.score-pill {
+  flex-shrink:0;
+  display:flex; flex-direction:column; align-items:center;
+  background:var(--mid); border:1px solid var(--border); border-radius:10px;
+  padding:10px 14px; min-width:72px; gap:4px;
+}
+.sp-icon  { font-size:16px; }
+.sp-label { font-family:'DM Mono',monospace; font-size:9px; color:var(--muted); text-transform:uppercase; letter-spacing:1px; }
+.sp-val   { font-family:'Bebas Neue',sans-serif; font-size:24px; transition:color .4s; }
+.sp-bar   { width:100%; height:3px; background:var(--border); border-radius:2px; overflow:hidden; }
+.sp-fill  { height:100%; border-radius:2px; width:0%; transition:width .5s ease, background .5s; background:var(--good); }
+
+/* Overall score pill (bigger) */
+.overall-pill {
+  flex-shrink:0;
+  display:flex; flex-direction:column; align-items:center;
+  background: linear-gradient(135deg, rgba(255,107,0,.12), rgba(255,107,0,.04));
+  border:1px solid rgba(255,107,0,.3); border-radius:10px;
+  padding:10px 18px; gap:2px;
+}
+.op-label { font-family:'DM Mono',monospace; font-size:9px; color:var(--orange); letter-spacing:2px; }
+.op-val   { font-family:'Bebas Neue',sans-serif; font-size:38px; letter-spacing:2px; transition:color .4s; }
+
+/* --- LIVE ANGLES -------------------------- */
+.angles-row {
+  display:grid; grid-template-columns:repeat(4,1fr); gap:8px;
+  padding:12px 16px; border-bottom:1px solid var(--border);
+}
+.ang-chip { background:var(--mid); border:1px solid var(--border); border-radius:8px; padding:8px 10px; text-align:center; }
+.ang-l { font-family:'DM Mono',monospace; font-size:8px; color:var(--muted); text-transform:uppercase; letter-spacing:1px; }
+.ang-v { font-family:'Bebas Neue',sans-serif; font-size:20px; transition:color .4s; }
+
+/* --- FEEDBACK ----------------------------- */
+.fb-section { padding:14px 16px; border-bottom:1px solid var(--border); }
+.section-title {
+  font-family:'Bebas Neue',sans-serif; font-size:11px; letter-spacing:3px;
+  color:var(--muted); margin-bottom:10px;
+}
+.fb-list { display:flex; flex-direction:column; gap:7px; }
+.fb-item {
+  display:flex; gap:10px; align-items:flex-start;
+  background:var(--card); border-radius:8px; padding:10px 12px;
+  border-left:3px solid var(--good); font-size:13px; line-height:1.55;
+  animation:si .25s ease;
+}
+.fb-item.warn { border-color:var(--warn); }
+.fb-item.bad  { border-color:var(--bad); }
+.fb-icon { color:var(--orange); font-family:"DM Mono",monospace; font-size:11px; flex-shrink:0; }
+@keyframes si { from{opacity:0;transform:translateX(-4px)} to{opacity:1;transform:none} }
+
+/* --- SHOT LOG ----------------------------- */
+.log-section { padding:14px 16px; border-bottom:1px solid var(--border); }
+
+.log-empty { color:var(--muted); font-family:'DM Mono',monospace; font-size:11px; padding:10px 0; text-align:center; }
+
+.shot-card {
+  background:var(--card); border-radius:10px;
+  margin-bottom:10px; overflow:hidden;
+  border:1px solid var(--border);
+  animation:si .3s ease;
+}
+.shot-card-header {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:12px 14px;
+  cursor:pointer;
+  user-select:none;
+}
+.shot-card-header:active { background:rgba(255,255,255,.03); }
+.shot-num  { font-family:'Bebas Neue',sans-serif; font-size:13px; letter-spacing:2px; color:var(--muted); }
+.shot-time { font-family:'DM Mono',monospace; font-size:11px; color:var(--muted); }
+.shot-score-big {
+  font-family:'Bebas Neue',sans-serif; font-size:32px; letter-spacing:2px;
+  transition:color .4s;
+}
+.shot-chevron { color:var(--muted); font-size:12px; transition:transform .2s; }
+.shot-chevron.open { transform:rotate(180deg); }
+
+.shot-detail {
+  border-top:1px solid var(--border);
+  padding:12px 14px;
+  display:none;
+}
+.shot-detail.open { display:block; }
+
+.detail-grid {
+  display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px;
+}
+.dg-cell { background:var(--mid); border-radius:6px; padding:8px 10px; }
+.dg-label { font-family:'DM Mono',monospace; font-size:9px; color:var(--muted); text-transform:uppercase; letter-spacing:1px; }
+.dg-val   { font-family:'Bebas Neue',sans-serif; font-size:20px; transition:color .4s; }
+
+.shot-feedback-list { display:flex; flex-direction:column; gap:6px; margin-bottom:12px; }
+.sfl-item {
+  background:var(--black); border-radius:6px; padding:8px 10px;
+  font-size:12px; line-height:1.5; border-left:2px solid var(--good);
+  display:flex; gap:8px;
+}
+.sfl-item.warn { border-color:var(--warn); }
+.sfl-item.bad  { border-color:var(--bad); }
+
+.shot-actions { display:flex; gap:8px; }
+.btn-save {
+  flex:1; background:var(--orange); color:#000; border:none;
+  padding:11px; border-radius:7px;
+  font-family:'Bebas Neue',sans-serif; font-size:16px; letter-spacing:2px;
+  cursor:pointer; transition:all .15s;
+}
+.btn-save:active { transform:scale(.97); }
+.btn-del {
+  background:rgba(255,68,85,.12); border:1px solid rgba(255,68,85,.3); color:var(--bad);
+  padding:11px 16px; border-radius:7px;
+  font-family:'DM Mono',monospace; font-size:11px;
+  cursor:pointer; transition:all .15s;
+}
+.btn-del:active { background:rgba(255,68,85,.2); }
+
+/* Saved badge */
+.saved-badge {
+  display:inline-flex; align-items:center; gap:5px;
+  background:rgba(46,255,154,.12); color:var(--good);
+  border:1px solid rgba(46,255,154,.3); border-radius:5px;
+  font-family:'DM Mono',monospace; font-size:10px;
+  padding:3px 9px; flex-shrink:0;
+}
+
+/* Export bar */
+.export-bar {
+  display:flex; gap:10px; padding:14px 16px;
+  border-bottom:1px solid var(--border);
+}
+.btn-export {
+  flex:1; background:var(--mid); border:1px solid var(--border); color:var(--text);
+  padding:11px; border-radius:7px;
+  font-family:'DM Mono',monospace; font-size:11px; letter-spacing:1px;
+  cursor:pointer; transition:all .15s; text-align:center;
+}
+.btn-export:active { background:var(--card); }
+
+/* --- TIP ---------------------------------- */
+.tip-section { padding:14px 16px 24px; }
+.tip-box {
+  background:var(--mid); border-left:3px solid var(--orange);
+  border-radius:0 8px 8px 0; padding:12px 14px;
+  font-size:13px; line-height:1.65; color:#999;
+}
+.tip-box strong {
+  display:block; color:var(--orange);
+  font-family:'DM Mono',monospace; font-size:10px;
+  letter-spacing:2px; margin-bottom:5px;
+}
+
+/* --- MODAL (save confirmation) ------------ */
+.modal-overlay {
+  position:fixed; inset:0; background:rgba(0,0,0,.8);
+  display:flex; align-items:flex-end; justify-content:center;
+  z-index:200; padding:0;
+  opacity:0; pointer-events:none; transition:opacity .25s;
+}
+.modal-overlay.on { opacity:1; pointer-events:all; }
+.modal {
+  background:var(--dark); border-radius:20px 20px 0 0;
+  width:100%; max-width:500px; padding:24px 20px 36px;
+  transform:translateY(30px); transition:transform .3s ease;
+  border-top:1px solid var(--border);
+}
+.modal-overlay.on .modal { transform:translateY(0); }
+.modal h3 { font-family:'Bebas Neue',sans-serif; font-size:22px; letter-spacing:3px; margin-bottom:4px; }
+.modal p  { color:var(--muted); font-size:13px; margin-bottom:20px; line-height:1.5; }
+.modal-summary {
+  background:var(--mid); border-radius:10px; padding:14px;
+  margin-bottom:18px; font-family:'DM Mono',monospace; font-size:12px; line-height:1.8;
+}
+.modal-summary span { color:var(--orange); }
+.modal-actions { display:flex; flex-direction:column; gap:10px; }
+.btn-modal-dl {
+  width:100%; background:var(--orange); color:#000; border:none;
+  padding:14px; border-radius:8px;
+  font-family:'Bebas Neue',sans-serif; font-size:20px; letter-spacing:3px;
+  cursor:pointer;
+}
+.btn-modal-copy {
+  width:100%; background:var(--mid); border:1px solid var(--border); color:var(--text);
+  padding:12px; border-radius:8px;
+  font-family:'DM Mono',monospace; font-size:12px; letter-spacing:1px;
+  cursor:pointer;
+}
+.btn-modal-close {
+  width:100%; background:transparent; border:none; color:var(--muted);
+  padding:10px; font-family:'DM Mono',monospace; font-size:11px;
+  cursor:pointer; letter-spacing:1px;
+}
+.copy-confirm {
+  text-align:center; color:var(--good);
+  font-family:'DM Mono',monospace; font-size:11px;
+  margin-top:-4px; display:none;
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">SHOT<em>FORM</em></div>
+  <div class="hdr-r">
+    <div class="pill"><div class="dot loading" id="aiDot"></div><span id="aiTxt">LOADING</span></div>
+    <div class="timer" id="timer">00:00</div>
+  </div>
+</header>
+
+<!-- CAMERA -->
+<div class="cam-section">
+  <div class="cam-wrap" id="camWrap">
+    <video id="vid" autoplay playsinline muted></video>
+    <canvas id="overlay"></canvas>
+
+    <div id="idle">
+      <div class="bball"></div>
+      <h2>TRACK YOUR SHOT</h2>
+      <p>Real-time AI form analysis. Position your full body in frame, then hit Start.</p>
+      <button class="btn-start" id="startBtn" onclick="startCamera()" disabled>START CAMERA</button>
+      <div class="ai-note" id="aiNote"> Loading AI model...</div>
+    </div>
+
+    <div id="hud">
+      <div class="corner tl"></div><div class="corner tr"></div>
+      <div class="corner bl"></div><div class="corner br"></div>
+      <div class="live-tag"><div class="dot live"></div> LIVE</div>
+      <div class="conf-tag" id="confTag">DETECTING...</div>
+    </div>
+  </div>
+</div>
+
+<!-- CAPTURE BAR -->
+<div class="capture-bar" id="capBar">
+  <button class="btn-cap" id="capBtn" onclick="captureShot()" disabled>+ CAPTURE SHOT</button>
+  <button class="btn-sm" id="stopBtn" onclick="stopSession()" disabled>STOP</button>
+  <button class="btn-sm" onclick="openExportModal()">SAVE ALL</button>
+</div>
+
+<!-- LIVE SCORES ROW -->
+<div class="scores-bar" id="scoresBar">
+  <div class="overall-pill">
+    <div class="op-label">OVERALL</div>
+    <div class="op-val" id="ov-overall">-</div>
+  </div>
+  <div class="score-pill">
+    <div class="sp-label">HEAD</div>
+    <div class="sp-val" id="ov-head">-</div>
+    <div class="sp-bar"><div class="sp-fill" id="sf-head"></div></div>
+  </div>
+  <div class="score-pill">
+    <div class="sp-label">SHOULDER</div>
+    <div class="sp-val" id="ov-shoulders">-</div>
+    <div class="sp-bar"><div class="sp-fill" id="sf-shoulders"></div></div>
+  </div>
+  <div class="score-pill">
+    <div class="sp-label">ELBOW</div>
+    <div class="sp-val" id="ov-elbow">-</div>
+    <div class="sp-bar"><div class="sp-fill" id="sf-elbow"></div></div>
+  </div>
+  <div class="score-pill">
+    <div class="sp-label">WRIST</div>
+    <div class="sp-val" id="ov-wrist">-</div>
+    <div class="sp-bar"><div class="sp-fill" id="sf-wrist"></div></div>
+  </div>
+  <div class="score-pill">
+    <div class="sp-label">STANCE</div>
+    <div class="sp-val" id="ov-stance">-</div>
+    <div class="sp-bar"><div class="sp-fill" id="sf-stance"></div></div>
+  </div>
+</div>
+
+<!-- ANGLES ROW -->
+<div class="angles-row">
+  <div class="ang-chip"><div class="ang-l">ELBOW</div><div class="ang-v" id="ag-elbow">-</div></div>
+  <div class="ang-chip"><div class="ang-l">SHOULDER</div><div class="ang-v" id="ag-shoulder">-</div></div>
+  <div class="ang-chip"><div class="ang-l">HIP</div><div class="ang-v" id="ag-hip">-</div></div>
+  <div class="ang-chip"><div class="ang-l">KNEE</div><div class="ang-v" id="ag-knee">-</div></div>
+</div>
+
+<!-- LIVE FEEDBACK -->
+<div class="fb-section">
+  <div class="section-title">COACH FEEDBACK</div>
+  <div class="fb-list" id="fbList">
+    <div class="fb-item"><span class="fb-icon">--</span><span>Start camera and step into frame. AI will analyze your form in real time.</span></div>
+  </div>
+</div>
+
+<!-- SHOT LOG -->
+<div class="log-section">
+  <div class="section-title" style="display:flex;align-items:center;justify-content:space-between">
+    SHOT LOG
+    <span id="shotCount" style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted)">0 shots</span>
+  </div>
+  <div id="logContainer"><div class="log-empty">No shots captured yet.<br>Hit "Capture Shot" during your session.</div></div>
+</div>
+
+<!-- EXPORT BAR -->
+<div class="export-bar">
+  <button class="btn-export" onclick="openExportModal()">EXPORT SESSION SUMMARY</button>
+  <button class="btn-export" onclick="resetAll()" style="max-width:90px;color:var(--bad)">RESET</button>
+</div>
+
+<!-- TIP -->
+<div class="tip-section">
+  <div class="section-title">COACHING TIP</div>
+  <div class="tip-box" id="tipBox">
+    <strong>ELBOW ALIGNMENT</strong>
+    Keep your shooting elbow directly under the ball, forming an "L". Elbow should point at the basket - foundation of a consistent shot.
+  </div>
+</div>
+
+<!-- SAVE MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModalIfBg(event)">
+  <div class="modal">
+    <h3>SESSION SUMMARY</h3>
+    <p id="modalDesc">Your session results ready to save or share.</p>
+    <div class="modal-summary" id="modalSummary"></div>
+    <div class="modal-actions">
+      <button class="btn-modal-dl" onclick="downloadSummary()">DOWNLOAD AS TEXT FILE</button>
+      <button class="btn-modal-copy" onclick="copySummary()">COPY TO CLIPBOARD</button>
+      <div class="copy-confirm" id="copyConfirm">Copied to clipboard!</div>
+      <button class="btn-modal-close" onclick="closeModal()">CLOSE</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// -- CONSTANTS -----------------------------------------
+const KP = {
+  nose:0,left_eye:1,right_eye:2,left_ear:3,right_ear:4,
+  left_shoulder:5,right_shoulder:6,left_elbow:7,right_elbow:8,
+  left_wrist:9,right_wrist:10,left_hip:11,right_hip:12,
+  left_knee:13,right_knee:14,left_ankle:15,right_ankle:16
+};
+const SKEL = [[5,6],[5,7],[7,9],[6,8],[8,10],[5,11],[6,12],[11,12],[11,13],[13,15],[12,14],[14,16],[0,1],[0,2],[1,3],[2,4]];
+
+const TIPS = [
+  {t:"ELBOW ALIGNMENT", b:"Keep your shooting elbow directly under the ball, forming an 'L'. Elbow should point at the basket - foundation of a consistent shot."},
+  {t:"WRIST FOLLOW-THROUGH", b:"After release, wrist snaps down and hangs loose. Hold the 'goose-neck' until the ball drops through the net."},
+  {t:"SQUARE YOUR SHOULDERS", b:"Both shoulders should face the basket at release. Rotating early bleeds power and accuracy out of the shot."},
+  {t:"BALANCED BASE", b:"Feet shoulder-width, shooting foot slightly forward. Weight shifts forward as you rise - balanced base = repeatable shot."},
+  {t:"EYES ON THE RIM", b:"Pick a spot on the back of the rim and lock on before you shoot. Never watch your own hand."},
+  {t:"ONE-PIECE MOTION", b:"Fluid, one-piece: legs, core, arm synchronized. Slow-motion dry runs help sync before game speed."},
+];
+
+const FB = {
+  head:[
+    {max:45,t:"bad",  m:"Head dropping - keep chin neutral, eyes on the basket through your entire release."},
+    {max:70,t:"warn", m:"Head slightly off-axis. Keep your gaze level at the rim throughout the shot."},
+    {max:101,t:"good",m:"Excellent head position! Eyes locked on target throughout the motion."},
+  ],
+  shoulders:[
+    {max:45,t:"bad",  m:"Shoulders uneven - square up to the basket before initiating the shot."},
+    {max:70,t:"warn", m:"Slight shoulder tilt. Aim to keep both shoulders level at release."},
+    {max:101,t:"good",m:"Shoulders squared perfectly. Clean alignment through release."},
+  ],
+  elbow:[
+    {max:45,t:"bad",  m:"Elbow flaring out! Tuck it in - form a 90deg angle pointing at the basket."},
+    {max:70,t:"warn", m:"Elbow drifting slightly. Keep it under the ball, in line with the rim."},
+    {max:101,t:"good",m:"Textbook elbow position - perfectly aligned under the ball."},
+  ],
+  wrist:[
+    {max:45,t:"bad",  m:"No wrist snap detected. Flick on release for arc and backspin."},
+    {max:70,t:"warn", m:"Wrist follow-through incomplete. Hold the goose-neck after release."},
+    {max:101,t:"good",m:"Beautiful wrist follow-through! That snap generates great backspin."},
+  ],
+  stance:[
+    {max:45,t:"bad",  m:"Legs too stiff or over-bent. Aim for a slight knee bend (~145deg) in your shooting stance."},
+    {max:70,t:"warn", m:"Stance needs adjustment. Slight knee flex powers a smooth upward release."},
+    {max:101,t:"good",m:"Athletic stance with great balance. Power transfers well from legs to shot."},
+  ],
+};
+
+// -- STATE ---------------------------------------------
+let detector=null, tfLoaded=false;
+let stream=null, raf=null, sessionTick=null;
+let sessionSec=0, isTracking=false;
+let lastScores=null, lastFbTime=0;
+let shots=[];  // array of shot objects
+let simS={head:72,shoulders:68,elbow:55,wrist:80,stance:65};
+
+// -- LOAD AI -------------------------------------------
+function loadTF(){
+  setAI('loading','LOADING');
+  function inj(src){ return new Promise((res,rej)=>{ const s=document.createElement('script'); s.src=src; s.onload=res; s.onerror=rej; document.head.appendChild(s); }); }
+  inj('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.10.0/dist/tf.min.js')
+    .then(()=>inj('https://cdn.jsdelivr.net/npm/@tensorflow-models/pose-detection@2.1.3/dist/pose-detection.min.js'))
+    .then(async()=>{
+      await tf.ready();
+      detector = await poseDetection.createDetector(
+        poseDetection.SupportedModels.MoveNet,
+        {modelType:poseDetection.movenet.modelType.SINGLEPOSE_LIGHTNING,enableSmoothing:true}
+      );
+      tfLoaded=true;
+      setAI('ready','AI READY');
+      document.getElementById('aiNote').textContent='AI LOADED. Ready to start.';
+      document.getElementById('startBtn').disabled=false;
+    })
+    .catch(()=>{
+      setAI('ready','SIM MODE');
+      document.getElementById('aiNote').innerHTML='Running in <strong>SIMULATION MODE</strong>.<br>All features work - camera + scoring fully active.';
+      document.getElementById('startBtn').disabled=false;
+    });
+}
+
+// -- CAMERA --------------------------------------------
+async function startCamera(){
+  const btn=document.getElementById('startBtn');
+  btn.textContent='CONNECTING...'; btn.disabled=true;
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({video:{width:{ideal:1280},height:{ideal:720},facingMode:'user'},audio:false});
+    const vid=document.getElementById('vid');
+    vid.srcObject=stream;
+    vid.onloadedmetadata=()=>vid.play().then(onLive).catch(e=>camErr(e));
+    setTimeout(()=>{ if(!isTracking) onLive(); },3000);
+  } catch(e){ camErr(e); }
+}
+
+function onLive(){
+  if(isTracking) return;
+  isTracking=true;
+  document.getElementById('vid').style.display='block';
+  document.getElementById('overlay').style.display='block';
+  document.getElementById('idle').classList.add('off');
+  document.getElementById('hud').classList.add('on');
+  document.getElementById('capBtn').disabled=false;
+  document.getElementById('stopBtn').disabled=false;
+  setAI('live', tfLoaded?'TRACKING':'SIM MODE');
+  resizeCvs();
+  startTimer();
+  rotateTip();
+  raf=requestAnimationFrame(loop);
+}
+
+function camErr(e){
+  document.getElementById('startBtn').textContent='START CAMERA';
+  document.getElementById('startBtn').disabled=false;
+  document.getElementById('aiNote').innerHTML=`<strong>CAMERA BLOCKED:</strong> ${e.message}<br>Allow camera access in your browser settings and try again.`;
+}
+
+function stopSession(){
+  isTracking=false;
+  if(raf) cancelAnimationFrame(raf);
+  if(stream){ stream.getTracks().forEach(t=>t.stop()); stream=null; }
+  clearInterval(sessionTick);
+  document.getElementById('vid').style.display='none';
+  document.getElementById('overlay').style.display='none';
+  document.getElementById('vid').srcObject=null;
+  document.getElementById('hud').classList.remove('on');
+  document.getElementById('idle').classList.remove('off');
+  document.getElementById('idle').querySelector('h2').textContent='SESSION PAUSED';
+  document.getElementById('startBtn').textContent='RESUME';
+  document.getElementById('startBtn').disabled=false;
+  document.getElementById('capBtn').disabled=true;
+  document.getElementById('stopBtn').disabled=true;
+  clearCvs();
+  setAI('ready','AI READY');
+}
+
+// -- MAIN LOOP -----------------------------------------
+async function loop(){
+  if(!isTracking) return;
+  if(tfLoaded&&detector) await realDetect();
+  else simDetect();
+  raf=requestAnimationFrame(loop);
+}
+
+async function realDetect(){
+  const vid=document.getElementById('vid');
+  if(vid.readyState<2) return;
+  try{
+    const poses=await detector.estimatePoses(vid);
+    if(poses&&poses.length>0){
+      const p=poses[0], sc=analyze(p);
+      lastScores={...sc,_pose:p};
+      updateLiveUI(sc); drawPose(p,sc);
+      const vk=p.keypoints.filter(k=>k.score>=.3).length;
+      const ac=Math.round(p.keypoints.reduce((s,k)=>s+k.score,0)/p.keypoints.length*100);
+      document.getElementById('confTag').textContent=`CONFIDENCE: ${ac}%  |  ${vk}/17 KEYPOINTS`;
+    } else {
+      document.getElementById('confTag').textContent='STEP INTO FRAME...';
+    }
+  }catch(e){}
+}
+
+function simDetect(){
+  Object.keys(simS).forEach(k=>{ simS[k]=Math.min(100,Math.max(15,simS[k]+(Math.random()-.47)*4)); });
+  const sc={
+    head:Math.round(simS.head), shoulders:Math.round(simS.shoulders),
+    elbow:Math.round(simS.elbow), wrist:Math.round(simS.wrist), stance:Math.round(simS.stance),
+    elbowAngle:Math.round(85+(simS.elbow-50)*.4),
+    shoulderAngle:Math.round(Math.max(0,15-simS.shoulders*.15)),
+    hipAngle:Math.round(8+Math.random()*5),
+    kneeAngle:Math.round(140+(simS.stance-50)*.3),
+  };
+  lastScores=sc;
+  updateLiveUI(sc); drawSim(sc);
+  document.getElementById('confTag').textContent='SIM MODE - Enable AI for real tracking';
+}
+
+// -- POSE ANALYSIS -------------------------------------
+function g(pose,n){ return pose.keypoints[KP[n]]; }
+function vis(k,t=.3){ return k&&k.score>=t; }
+function ang3(A,B,C){
+  const ab={x:A.x-B.x,y:A.y-B.y},cb={x:C.x-B.x,y:C.y-B.y};
+  const d=ab.x*cb.x+ab.y*cb.y, m=Math.hypot(ab.x,ab.y)*Math.hypot(cb.x,cb.y);
+  return m<.001?0:Math.round(Math.acos(Math.max(-1,Math.min(1,d/m)))*180/Math.PI);
+}
+function arm(pose){
+  const lw=g(pose,'left_wrist'),rw=g(pose,'right_wrist');
+  if(!vis(lw)&&!vis(rw)) return 'right';
+  if(!vis(lw)) return 'right'; if(!vis(rw)) return 'left';
+  return lw.y<rw.y?'left':'right';
+}
+function analyze(pose){
+  const a=arm(pose),sh=g(pose,a+'_shoulder'),el=g(pose,a+'_elbow'),wr=g(pose,a+'_wrist');
+  const ls=g(pose,'left_shoulder'),rs=g(pose,'right_shoulder');
+  const lh=g(pose,'left_hip'),rh=g(pose,'right_hip');
+  const lk=g(pose,'left_knee'),rk=g(pose,'right_knee');
+  const la=g(pose,'left_ankle'),ra=g(pose,'right_ankle');
+  const nose=g(pose,'nose');
+
+  let eA=null,eS=50;
+  if(vis(sh)&&vis(el)&&vis(wr)){
+    eA=ang3(sh,el,wr);
+    eS=eA>=75&&eA<=120?90:eA<75?Math.max(20,70-(75-eA)*1.2):Math.max(20,80-(eA-120));
+    eS=Math.min(100,Math.round(eS));
+  }
+  let sA=null,sS=50;
+  if(vis(ls)&&vis(rs)){
+    const dy=Math.abs(ls.y-rs.y),dx=Math.abs(ls.x-rs.x);
+    sA=dx>5?Math.round(Math.atan(dy/dx)*180/Math.PI):0;
+    sS=sA<8?95:Math.max(20,95-(sA-8)*3); sS=Math.round(sS);
+  }
+  let wS=50;
+  if(vis(el)&&vis(wr)){
+    const up=el.y-wr.y;
+    wS=up>30?95:up>0?60+up:Math.max(20,55+up*1.5); wS=Math.min(100,Math.round(wS));
+  }
+  let hS=50;
+  if(vis(nose,.2)&&vis(ls)&&vis(rs)){
+    const mx=(ls.x+rs.x)/2,sw=Math.abs(rs.x-ls.x),rel=sw>0?Math.abs(nose.x-mx)/sw:.5;
+    hS=rel<.15?95:Math.max(30,95-(rel-.15)*150); hS=Math.round(hS);
+  }
+  let kA=null,stS=50;
+  const pairs=[[lh,lk,la],[rh,rk,ra]].filter(([h,k,a])=>vis(h)&&vis(k)&&vis(a));
+  if(pairs.length){
+    const angs=pairs.map(([h,k,a])=>ang3(h,k,a));
+    kA=Math.round(angs.reduce((s,v)=>s+v,0)/angs.length);
+    stS=kA>=135&&kA<=165?90:kA<135?Math.max(30,80-(135-kA)*1.5):Math.max(30,80-(kA-165)*3);
+    stS=Math.min(100,Math.round(stS));
+  }
+  let hA=null;
+  if(vis(lh)&&vis(rh)){
+    const dy=Math.abs(lh.y-rh.y),dx=Math.abs(lh.x-rh.x);
+    hA=dx>5?Math.round(Math.atan(dy/dx)*180/Math.PI):0;
+  }
+  return {head:hS,shoulders:sS,elbow:eS,wrist:wS,stance:stS,elbowAngle:eA,shoulderAngle:sA,hipAngle:hA,kneeAngle:kA,arm:a};
+}
+
+// -- DRAW ----------------------------------------------
+function resizeCvs(){
+  const w=document.getElementById('camWrap'),c=document.getElementById('overlay');
+  c.width=w.offsetWidth; c.height=w.offsetHeight;
+}
+window.addEventListener('resize',resizeCvs);
+function clearCvs(){ const c=document.getElementById('overlay'); c.getContext('2d').clearRect(0,0,c.width,c.height); }
+
+function drawPose(pose,sc){
+  const c=document.getElementById('overlay'),ctx=c.getContext('2d');
+  const vid=document.getElementById('vid');
+  const sx=c.width/(vid.videoWidth||c.width), sy=c.height/(vid.videoHeight||c.height);
+  ctx.clearRect(0,0,c.width,c.height);
+  ctx.strokeStyle='rgba(255,107,0,.55)'; ctx.lineWidth=2.5;
+  SKEL.forEach(([i,j])=>{
+    const a=pose.keypoints->,b=pose.keypoints[j];
+    if(!vis(a)||!vis(b)) return;
+    ctx.beginPath(); ctx.moveTo(a.x*sx,a.y*sy); ctx.lineTo(b.x*sx,b.y*sy); ctx.stroke();
+  });
+  pose.keypoints.forEach((k,idx)=>{
+    if(!vis(k)) return;
+    const x=k.x*sx,y=k.y*sy,isH=idx<=4,r=isH?9:5;
+    ctx.beginPath(); ctx.arc(x,y,r+4,0,Math.PI*2);
+    ctx.fillStyle=isH?'rgba(255,107,0,.18)':'rgba(46,255,154,.1)'; ctx.fill();
+    ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2);
+    ctx.fillStyle=isH?'rgba(255,107,0,.9)':k.score>.7?'rgba(46,255,154,.85)':'rgba(255,217,61,.75)'; ctx.fill();
+  });
+  const ek=pose.keypoints[KP[sc.arm+'_elbow']];
+  if(vis(ek)&&sc.elbowAngle!==null){
+    ctx.font='bold 12px "DM Mono",monospace'; ctx.fillStyle=sCol(sc.elbow);
+    ctx.fillText(sc.elbowAngle+'d',ek.x*sx+12,ek.y*sy-8);
+  }
+}
+
+function drawSim(sc){
+  const c=document.getElementById('overlay'),ctx=c.getContext('2d');
+  ctx.clearRect(0,0,c.width,c.height);
+  const W=c.width,H=c.height,cx=W*.5,cy=H*.5,t=Date.now()/1000;
+  const J=[
+    [cx,cy-145],[cx-8,cy-155],[cx+8,cy-155],[cx-14,cy-148],[cx+14,cy-148],
+    [cx-52,cy-90],[cx+52,cy-90],[cx-68,cy-18],[cx+68,cy-18],
+    [cx-60,cy+55],[cx+60,cy+55],[cx-28,cy+18],[cx+28,cy+18],
+    [cx-30,cy+110],[cx+30,cy+110],[cx-32,cy+175],[cx+32,cy+175],
+  ].map((j,i)=>[j[0],j[1]+Math.sin(t*1.1+i*.4)*2]);
+  ctx.strokeStyle='rgba(255,107,0,.5)'; ctx.lineWidth=2;
+  SKEL.forEach(([i,j])=>{ ctx.beginPath(); ctx.moveTo(J->[0],J->[1]); ctx.lineTo(J[j][0],J[j][1]); ctx.stroke(); });
+  J.forEach(([x,y],i)=>{
+    ctx.beginPath(); ctx.arc(x,y,i<=4?10:5,0,Math.PI*2);
+    ctx.fillStyle=i<=4?'rgba(255,107,0,.85)':'rgba(46,255,154,.7)'; ctx.fill();
+  });
+  if(sc.elbowAngle){
+    ctx.font='bold 12px "DM Mono",monospace'; ctx.fillStyle=sCol(sc.elbow);
+    ctx.fillText(sc.elbowAngle+'d',J[8][0]+12,J[8][1]-8);
+  }
+}
+
+// -- UI ------------------------------------------------
+function sCol(s){ return s>=70?'var(--good)':s>=45?'var(--warn)':'var(--bad)'; }
+
+function updateLiveUI(sc){
+  const parts=['head','shoulders','elbow','wrist','stance'];
+  let tot=0;
+  parts.forEach(p=>{
+    const v=sc[p]; tot+=v;
+    document.getElementById('ov-'+p).textContent=v;
+    document.getElementById('ov-'+p).style.color=sCol(v);
+    document.getElementById('sf-'+p).style.width=v+'%';
+    document.getElementById('sf-'+p).style.background=sCol(v);
+  });
+  const avg=Math.round(tot/parts.length);
+  document.getElementById('ov-overall').textContent=avg;
+  document.getElementById('ov-overall').style.color=sCol(avg);
+
+  document.getElementById('ag-elbow').textContent   = sc.elbowAngle!==null?sc.elbowAngle+'d':'-';
+  document.getElementById('ag-shoulder').textContent= sc.shoulderAngle!==null?sc.shoulderAngle+'d':'-';
+  document.getElementById('ag-hip').textContent     = sc.hipAngle!==null?sc.hipAngle+'d':'-';
+  document.getElementById('ag-knee').textContent    = sc.kneeAngle!==null?sc.kneeAngle+'d':'-';
+
+  chipCol('ag-elbow',sc.elbowAngle,75,120);
+  chipCol('ag-knee',sc.kneeAngle,135,165);
+  chipCol('ag-shoulder',sc.shoulderAngle,0,8);
+  chipCol('ag-hip',sc.hipAngle,0,10);
+
+  const now=Date.now();
+  if(now-lastFbTime>1500){ renderFeedback(sc); lastFbTime=now; }
+}
+
+function chipCol(id,v,lo,hi){
+  if(v===null) return;
+  document.getElementById(id).style.color=(v>=lo&&v<=hi)?'var(--good)':(v>=lo-15&&v<=hi+15)?'var(--warn)':'var(--bad)';
+}
+
+function renderFeedback(sc){
+  const items=['elbow','wrist','shoulders','head','stance']
+    .map(p=>({...FB[p].find(f=>sc[p]<f.max),p}))
+    .sort((a,b)=>({bad:0,warn:1,good:2}[a.t]-{bad:0,warn:1,good:2}[b.t]));
+  const list=document.getElementById('fbList');
+  list.innerHTML='';
+  items.slice(0,4).forEach(item=>{
+    const d=document.createElement('div');
+    d.className='fb-item '+(item.t==='good'?'':item.t);
+    d.innerHTML=`<span>${item.t==='good'?'OK':item.t==='warn'?'!!':'X'}</span><span>${item.m}</span>`;
+    list.appendChild(d);
+  });
+}
+
+// -- CAPTURE SHOT --------------------------------------
+function captureShot(){
+  if(!lastScores){ alert('No pose detected yet - make sure your full body is visible in frame.'); return; }
+
+  const sc=lastScores;
+  const parts=['head','shoulders','elbow','wrist','stance'];
+  const avg=Math.round(parts.reduce((a,p)=>a+sc[p],0)/parts.length);
+  const weak=parts.reduce((a,b)=>sc[a]<sc[b]?a:b);
+  const m=String(Math.floor(sessionSec/60)).padStart(2,'0');
+  const s=String(sessionSec%60).padStart(2,'0');
+
+  // Build feedback texts for this shot
+  const fbItems=parts
+    .map(p=>({...FB[p].find(f=>sc[p]<f.max),p}))
+    .sort((a,b)=>({bad:0,warn:1,good:2}[a.t]-{bad:0,warn:1,good:2}[b.t]));
+
+  const shot={
+    id: shots.length+1,
+    time:`${m}:${s}`,
+    scores:{...sc},
+    avg, weak,
+    angles:{
+      elbow: sc.elbowAngle,
+      shoulder: sc.shoulderAngle,
+      hip: sc.hipAngle,
+      knee: sc.kneeAngle
+    },
+    feedback: fbItems,
+    saved: false,
+    ts: new Date().toLocaleTimeString()
+  };
+
+  shots.unshift(shot);
+  renderShotLog();
+
+  // Flash capture
+  document.getElementById('hud').style.background='rgba(255,107,0,.12)';
+  setTimeout(()=>document.getElementById('hud').style.background='',250);
+
+  // Scroll to shot log
+  setTimeout(()=>{
+    document.querySelector('.log-section').scrollIntoView({behavior:'smooth',block:'start'});
+  },300);
+}
+
+// -- SHOT LOG RENDER -----------------------------------
+function renderShotLog(){
+  const container=document.getElementById('logContainer');
+  document.getElementById('shotCount').textContent=shots.length+' shot'+(shots.length!==1?'s':'');
+
+  if(!shots.length){
+    container.innerHTML='<div class="log-empty">No shots captured yet.<br>Hit "Capture Shot" during your session.</div>';
+    return;
+  }
+
+  container.innerHTML='';
+  shots.forEach((shot,idx)=>{
+    const cls=shot.avg>=70?'good':shot.avg>=45?'warn':'bad';
+    const colr=shot.avg>=70?'var(--good)':shot.avg>=45?'var(--warn)':'var(--bad)';
+    const card=document.createElement('div');
+    card.className='shot-card';
+    card.id='shot-'+shot.id;
+
+    const angleStr=[
+      shot.angles.elbow!==null?`Elbow ${shot.angles.elbow}d`:'',
+      shot.angles.knee!==null?`Knee ${shot.angles.knee}d`:'',
+      shot.angles.shoulder!==null?`Shoulder ${shot.angles.shoulder}d`:'',
+    ].filter(Boolean).join('  .  ');
+
+    card.innerHTML=`
+      <div class="shot-card-header" onclick="toggleDetail(${shot.id})">
+        <div>
+          <div class="shot-num">SHOT #${shot.id}</div>
+          <div class="shot-time">${shot.ts}  .  ${shot.time} into session</div>
+          ${angleStr?`<div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);margin-top:3px">${angleStr}</div>`:''}
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          ${shot.saved?'<span class="saved-badge">SAVED</span>':''}
+          <div class="shot-score-big" style="color:${colr}">${shot.avg}</div>
+          <div class="shot-chevron" id="chev-${shot.id}">v</div>
+        </div>
+      </div>
+      <div class="shot-detail" id="detail-${shot.id}">
+        <div class="detail-grid">
+          ${['head','shoulders','elbow','wrist','stance'].map(p=>`
+            <div class="dg-cell">
+              <div class="dg-label">${p}</div>
+              <div class="dg-val" style="color:${sCol(shot.scores[p])}">${shot.scores[p]}</div>
+            </div>
+          `).join('')}
+          <div class="dg-cell" style="background:rgba(255,107,0,.08);border:1px solid rgba(255,107,0,.2)">
+            <div class="dg-label" style="color:var(--orange)">OVERALL</div>
+            <div class="dg-val" style="color:${colr};font-size:28px">${shot.avg}</div>
+          </div>
+        </div>
+        <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);margin-bottom:8px;letter-spacing:2px">COACH NOTES</div>
+        <div class="shot-feedback-list">
+          ${shot.feedback.slice(0,3).map(f=>`
+            <div class="sfl-item ${f.t==='good'?'':f.t}">
+              <span>${f.t==='good'?'OK':f.t==='warn'?'!!':'X'}</span>
+              <span>${f.m}</span>
+            </div>
+          `).join('')}
+        </div>
+        <div class="shot-actions">
+          <button class="btn-save" onclick="saveShot(${shot.id})">
+            ${shot.saved?'SAVED':'SAVE THIS SHOT'}
+          </button>
+          <button class="btn-del" onclick="deleteShot(${shot.id})">DELETE</button>
+        </div>
+      </div>
+    `;
+    container.appendChild(card);
+    // Auto-expand newest shot
+    if(idx===0) setTimeout(()=>toggleDetail(shot.id),50);
+  });
+}
+
+function toggleDetail(id){
+  const det=document.getElementById('detail-'+id);
+  const chev=document.getElementById('chev-'+id);
+  const isOpen=det.classList.contains('open');
+  // Close all
+  document.querySelectorAll('.shot-detail').forEach(d=>d.classList.remove('open'));
+  document.querySelectorAll('.shot-chevron').forEach(c=>c.classList.remove('open'));
+  if(!isOpen){ det.classList.add('open'); chev.classList.add('open'); }
+}
+
+function saveShot(id){
+  const shot=shots.find(s=>s.id===id);
+  if(!shot) return;
+  shot.saved=true;
+  renderShotLog();
+  // Re-expand
+  setTimeout(()=>{ toggleDetail(id); },50);
+}
+
+function deleteShot(id){
+  shots=shots.filter(s=>s.id!==id);
+  renderShotLog();
+}
+
+// -- EXPORT / SAVE ALL ---------------------------------
+function buildSummaryText(){
+  const now=new Date().toLocaleString();
+  const total=shots.length;
+  if(!total) return 'No shots recorded in this session.';
+
+  const avgs=shots.map(s=>s.avg);
+  const best=Math.max(...avgs), worst=Math.min(...avgs);
+  const mean=Math.round(avgs.reduce((a,b)=>a+b,0)/avgs.length);
+
+  const parts=['head','shoulders','elbow','wrist','stance'];
+  const partAvgs={};
+  parts.forEach(p=>{ partAvgs[p]=Math.round(shots.reduce((a,s)=>a+s.scores[p],0)/shots.length); });
+  const weakPart=parts.reduce((a,b)=>partAvgs[a]<partAvgs[b]?a:b);
+  const strongPart=parts.reduce((a,b)=>partAvgs[a]>partAvgs[b]?a:b);
+
+  let txt=`SHOTFORM AI - SESSION SUMMARY\n`;
+  txt+=`${'-'.repeat(40)}\n`;
+  txt+=`Date:     ${now}\n`;
+  txt+=`Duration: ${String(Math.floor(sessionSec/60)).padStart(2,'0')}:${String(sessionSec%60).padStart(2,'0')}\n`;
+  txt+=`Shots:    ${total}\n\n`;
+
+  txt+=`OVERALL PERFORMANCE\n${'-'.repeat(30)}\n`;
+  txt+=`Average Score:  ${mean}/100\n`;
+  txt+=`Best Shot:      ${best}/100\n`;
+  txt+=`Weakest Shot:   ${worst}/100\n\n`;
+
+  txt+=`FORM BREAKDOWN (session averages)\n${'-'.repeat(30)}\n`;
+  parts.forEach(p=>{ txt+=`${(p.charAt(0).toUpperCase()+p.slice(1)).padEnd(12)} ${partAvgs[p]}/100\n`; });
+  txt+=`\nStrength: ${strongPart.toUpperCase()} (${partAvgs[strongPart]})\n`;
+  txt+=`Focus On: ${weakPart.toUpperCase()} (${partAvgs[weakPart]})\n\n`;
+
+  txt+=`SHOT-BY-SHOT LOG\n${'-'.repeat(30)}\n`;
+  [...shots].reverse().forEach(s=>{
+    const grade=s.avg>=80?'A':s.avg>=70?'B':s.avg>=60?'C':s.avg>=50?'D':'F';
+    txt+=`Shot #${s.id}  [${s.ts}]  Score: ${s.avg}/100 (${grade})  Weak: ${s.weak}\n`;
+    txt+=`  Head:${s.scores.head}  Shoulder:${s.scores.shoulders}  Elbow:${s.scores.elbow}  Wrist:${s.scores.wrist}  Stance:${s.scores.stance}\n`;
+    if(s.angles.elbow) txt+=`  Angles -> Elbow:${s.angles.elbow}d Knee:${s.angles.knee||'-'}d Shoulder:${s.angles.shoulder||'-'}d\n`;
+    txt+='\n';
+  });
+
+  txt+=`COACHING RECOMMENDATIONS\n${'-'.repeat(30)}\n`;
+  const rec=FB[weakPart].find(f=>partAvgs[weakPart]<f.max);
+  if(rec) txt+=`- ${rec.m}\n`;
+  txt+=`- Keep practicing - consistency is key to improving your form score.\n`;
+  txt+=`\n${'-'.repeat(40)}\nGenerated by SHOTFORM AI`;
+  return txt;
+}
+
+let summaryCache='';
+
+function openExportModal(){
+  summaryCache=buildSummaryText();
+  const count=shots.length;
+
+  document.getElementById('modalDesc').textContent=
+    count?`${count} shot${count!==1?'s':''} captured. Ready to save or share your session.`:
+    'No shots recorded yet - capture some shots first!';
+
+  // Format for modal display
+  const lines=summaryCache.split('\n').slice(0,18).join('\n');
+  document.getElementById('modalSummary').innerHTML=
+    lines.replace(/(\d+\/100)/g,'<span>$1</span>').replace(/Shot #\d+/g,'<span>$&</span>')
+    .split('\n').join('<br>');
+
+  document.getElementById('copyConfirm').style.display='none';
+  document.getElementById('modalOverlay').classList.add('on');
+}
+
+function closeModal(){ document.getElementById('modalOverlay').classList.remove('on'); }
+function closeModalIfBg(e){ if(e.target===document.getElementById('modalOverlay')) closeModal(); }
+
+function downloadSummary(){
+  if(!summaryCache) return;
+  const blob=new Blob([summaryCache],{type:'text/plain'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`shotform-session-${new Date().toISOString().slice(0,10)}.txt`;
+  a.click();
+  closeModal();
+}
+
+async function copySummary(){
+  if(!summaryCache) return;
+  try{
+    await navigator.clipboard.writeText(summaryCache);
+    document.getElementById('copyConfirm').style.display='block';
+  }catch(e){
+    // fallback
+    const ta=document.createElement('textarea');
+    ta.value=summaryCache; ta.style.position='fixed'; ta.style.opacity='0';
+    document.body.appendChild(ta); ta.select(); document.execCommand('copy');
+    document.body.removeChild(ta);
+    document.getElementById('copyConfirm').style.display='block';
+  }
+}
+
+// -- TIMER & TIPS --------------------------------------
+function startTimer(){
+  clearInterval(sessionTick);
+  sessionTick=setInterval(()=>{
+    sessionSec++;
+    const m=String(Math.floor(sessionSec/60)).padStart(2,'0');
+    const s=String(sessionSec%60).padStart(2,'0');
+    document.getElementById('timer').textContent=m+':'+s;
+  },1000);
+}
+
+let tipTimer=null;
+function rotateTip(){
+  clearTimeout(tipTimer);
+  const t=TIPS[Math.floor(Math.random()*TIPS.length)];
+  document.getElementById('tipBox').innerHTML=`<strong>${t.t}</strong>${t.b}`;
+  tipTimer=setTimeout(rotateTip,28000);
+}
+
+function setAI(state,label){
+  document.getElementById('aiDot').className='dot '+state;
+  document.getElementById('aiTxt').textContent=label;
+}
+
+function resetAll(){
+  if(shots.length && !confirm('Reset session and clear all shots?')) return;
+  stopSession();
+  clearInterval(sessionTick);
+  sessionSec=0; shots=[];
+  document.getElementById('timer').textContent='00:00';
+  renderShotLog();
+  ['head','shoulders','elbow','wrist','stance'].forEach(p=>{
+    document.getElementById('ov-'+p).textContent='-';
+    document.getElementById('ov-'+p).style.color='';
+    document.getElementById('sf-'+p).style.width='0%';
+  });
+  document.getElementById('ov-overall').textContent='-';
+  ['ag-elbow','ag-shoulder','ag-hip','ag-knee'].forEach(id=>{ document.getElementById(id).textContent='-'; document.getElementById(id).style.color=''; });
+  document.getElementById('fbList').innerHTML='<div class="fb-item"><span class="fb-icon">--</span><span>Start camera and step into frame.</span></div>';
+  document.getElementById('idle').querySelector('h2').textContent='TRACK YOUR SHOT';
+  simS={head:72,shoulders:68,elbow:55,wrist:80,stance:65};
+  lastScores=null;
+}
+
+// -- INIT ----------------------------------------------
+loadTF();
+</script>
+</body>
+</html>
