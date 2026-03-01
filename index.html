@@ -3,84 +3,92 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SHOTFORM AI Pro — Centered Tracking</title>
+<title>SHOTFORM AI — Pro Video Capture</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&display=swap');
 
   :root {
     --orange: #FF6B00;
     --black: #080808;
-    --dark: #0f0f0f;
-    --border: #272727;
-    --text: #EBEBEB;
-    --muted: #555;
+    --dark: #121212;
+    --border: #222;
     --good: #2EFF9A;
-    --warn: #FFD93D;
-    --bad: #FF4455;
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { background: var(--black); color: var(--text); font-family: 'DM Sans', sans-serif; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+  body { background: var(--black); color: #fff; font-family: sans-serif; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
 
-  header { display: flex; align-items: center; justify-content: space-between; padding: 12px 22px; border-bottom: 1px solid var(--border); background: var(--dark); flex-shrink: 0; }
-  .logo { font-family: 'Bebas Neue', sans-serif; font-size: 24px; letter-spacing: 4px; color: var(--orange); }
-  .ai-pill { display: flex; align-items: center; gap: 7px; font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); padding: 4px 11px; border: 1px solid var(--border); border-radius: 20px; }
-  .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); }
-  .dot.live { background: var(--orange); animation: blink 1s infinite; }
-  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+  header { padding: 15px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+  .logo { font-family: 'Bebas Neue', sans-serif; color: var(--orange); font-size: 24px; letter-spacing: 2px; }
 
-  .layout { display: grid; grid-template-columns: 1fr 330px; flex: 1; overflow: hidden; }
-
-  .vcol { display: flex; flex-direction: column; overflow: hidden; border-right: 1px solid var(--border); position: relative; }
-  .vwrap { flex: 1; position: relative; background: #000; overflow: hidden; }
-
-  video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); display: none; }
-  canvas#overlay { position: absolute; inset: 0; width: 100%; height: 100%; transform: scaleX(-1); pointer-events: none; display: none; z-index: 5; }
-
-  #idle { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; z-index: 10; background: var(--black); }
-  .btn-main { background: var(--orange); color: #000; border: none; padding: 14px 40px; font-family: 'Bebas Neue', sans-serif; font-size: 20px; cursor: pointer; border-radius: 4px; }
-
-  .sidebar { background: var(--dark); padding: 20px; display: flex; flex-direction: column; gap: 25px; overflow-y: auto; }
-  .sec-lbl { font-family: 'Bebas Neue', sans-serif; font-size: 12px; letter-spacing: 2px; color: var(--muted); margin-bottom: 10px; }
+  .layout { display: flex; flex: 1; position: relative; overflow: hidden; }
   
-  .achip { background: var(--mid); padding: 10px; border: 1px solid var(--border); border-radius: 6px; text-align: center; }
-  .acv { font-family: 'Bebas Neue', sans-serif; font-size: 28px; color: var(--orange); }
+  /* VIDEO CONTAINER */
+  .vwrap { flex: 1; position: relative; background: #000; display: flex; align-items: center; justify-content: center; }
+  
+  video#vid { position: absolute; width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
+  canvas#overlay { position: absolute; width: 100%; height: 100%; transform: scaleX(-1); z-index: 5; pointer-events: none; }
 
-  @media (max-width: 750px) { .layout { grid-template-columns: 1fr; } .sidebar { display: none; } }
+  /* SIDEBAR */
+  .sidebar { width: 300px; background: var(--dark); border-left: 1px solid var(--border); padding: 20px; display: flex; flex-direction: column; gap: 20px; }
+  
+  .btn-rec { 
+    background: #ff4444; color: white; border: none; padding: 15px; 
+    border-radius: 50px; font-weight: bold; cursor: pointer; 
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    box-shadow: 0 0 15px rgba(255, 68, 68, 0.4);
+  }
+  .btn-rec:disabled { opacity: 0.5; cursor: not-allowed; filter: grayscale(1); }
+  .rec-dot { width: 10px; height: 10px; background: white; border-radius: 50%; animation: blink 1s infinite; }
+
+  #idle { position: absolute; inset: 0; z-index: 20; background: var(--black); display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .btn-start { background: var(--orange); border: none; padding: 15px 40px; font-family: 'Bebas Neue'; font-size: 20px; border-radius: 5px; cursor: pointer; }
+
+  .stat-card { background: #1a1a1a; padding: 15px; border-radius: 8px; border: 1px solid var(--border); }
+  .stat-val { font-family: 'Bebas Neue'; font-size: 32px; color: var(--orange); }
+
+  @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+  
+  @media (max-width: 800px) {
+    .layout { flex-direction: column; }
+    .sidebar { width: 100%; height: auto; order: 2; border-left: none; border-top: 1px solid var(--border); }
+    .vwrap { order: 1; }
+  }
 </style>
 </head>
 <body>
 
 <header>
-  <div class="logo">SHOT<em>FORM</em> PRO</div>
-  <div class="ai-pill"><div class="dot live" id="aiDot"></div> <span id="aiTxt">3D BLAZEPOSE</span></div>
+  <div class="logo">SHOTFORM PRO</div>
+  <div id="status" style="font-family: 'DM Mono'; font-size: 10px; color: #555;">AI INITIALIZING...</div>
 </header>
 
 <div class="layout">
-  <div class="vcol">
-    <div class="vwrap" id="vwrap">
-      <video id="vid" autoplay playsinline muted></video>
-      <canvas id="overlay"></canvas>
-      <div id="idle">
-        <button class="btn-main" onclick="startCamera()">START TRACKER</button>
-        <p style="color:var(--muted); font-size: 12px;">Ensure full body is visible</p>
-      </div>
+  <div class="vwrap" id="container">
+    <video id="vid" autoplay playsinline muted></video>
+    <canvas id="overlay"></canvas>
+    
+    <div id="idle">
+      <button class="btn-start" onclick="startCamera()">START SESSION</button>
     </div>
   </div>
 
   <div class="sidebar">
-    <div class="sec">
-      <div class="sec-lbl">Live 3D Angles</div>
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-        <div class="achip"><div class="acv" id="a-elbow">—</div><div style="font-size:10px">ELBOW</div></div>
-        <div class="achip"><div class="acv" id="a-knee">—</div><div style="font-size:10px">KNEE</div></div>
-      </div>
+    <button class="btn-rec" id="recBtn" onclick="recordThreeSeconds()" disabled>
+      <div class="rec-dot"></div> RECORD 3S CLIP
+    </button>
+
+    <div class="stat-card">
+      <div style="font-size: 10px; color: #888;">ELBOW ANGLE</div>
+      <div class="stat-val" id="a-elbow">0°</div>
     </div>
-    <div class="sec">
-        <div class="sec-lbl">Vertical Offset</div>
-        <input type="range" id="yOffset" min="-100" max="100" value="0" style="width:100%">
-        <div style="font-size: 10px; color: var(--muted); margin-top: 5px;">Adjust if skeleton is too low/high</div>
+
+    <div class="stat-card">
+      <div style="font-size: 10px; color: #888;">KNEE ANGLE</div>
+      <div class="stat-val" id="a-knee">0°</div>
     </div>
+
+    <div id="downloadArea"></div>
   </div>
 </div>
 
@@ -92,27 +100,31 @@
 
 <script>
 let detector, stream, isTracking = false;
-const yOffsetSlider = document.getElementById('yOffset');
+let recorder, recordedChunks = [];
 
 async function init() {
   const model = poseDetection.SupportedModels.BlazePose;
   detector = await poseDetection.createDetector(model, {
     runtime: 'mediapipe',
     solutionPath: 'https://cdn.jsdelivr.net/npm/@mediapipe/pose',
+    separateSegmentationMask: false,
     modelType: 'full'
   });
+  document.getElementById('status').textContent = 'BLAZEPOSE ACTIVE';
 }
 
 async function startCamera() {
-  stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: 640, height: 480 }, audio: false });
+  stream = await navigator.mediaDevices.getUserMedia({ 
+    video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } }, 
+    audio: false 
+  });
   const vid = document.getElementById('vid');
   vid.srcObject = stream;
   vid.onloadedmetadata = () => {
     vid.play();
     isTracking = true;
     document.getElementById('idle').style.display = 'none';
-    document.getElementById('vid').style.display = 'block';
-    document.getElementById('overlay').style.display = 'block';
+    document.getElementById('recBtn').disabled = false;
     resize();
     loop();
   };
@@ -121,8 +133,9 @@ async function startCamera() {
 function resize() {
   const v = document.getElementById('vid');
   const c = document.getElementById('overlay');
-  c.width = v.clientWidth;
-  c.height = v.clientHeight;
+  const rect = v.getBoundingClientRect();
+  c.width = rect.width;
+  c.height = rect.height;
 }
 
 async function loop() {
@@ -136,16 +149,30 @@ async function loop() {
 
   if (poses && poses.length > 0) {
     const pose = poses[0];
-    drawPose(ctx, pose.keypoints, canvas.width, canvas.height);
+    drawAccuratePose(ctx, pose.keypoints, canvas);
     updateAngles(pose.keypoints);
   }
   requestAnimationFrame(loop);
 }
 
-function drawPose(ctx, keypoints, cw, ch) {
-  const offset = parseInt(yOffsetSlider.value);
+// ── ACCURATE MAPPING ──────────────────────────────────
+function drawAccuratePose(ctx, keypoints, canvas) {
+  const vid = document.getElementById('vid');
   
-  // BlazePose Skeleton Connections
+  // Calculate Scaling to account for "Object-Fit: Cover"
+  const videoAspect = vid.videoWidth / vid.videoHeight;
+  const canvasAspect = canvas.width / canvas.height;
+  
+  let scale, offsetX = 0, offsetY = 0;
+  
+  if (canvasAspect > videoAspect) {
+    scale = canvas.width / vid.videoWidth;
+    offsetY = (canvas.height - vid.videoHeight * scale) / 2;
+  } else {
+    scale = canvas.height / vid.videoHeight;
+    offsetX = (canvas.width - vid.videoWidth * scale) / 2;
+  }
+
   const connections = [[11,12],[11,13],[13,15],[12,14],[14,16],[11,23],[12,24],[23,24],[23,25],[25,27],[24,26],[26,28]];
 
   ctx.strokeStyle = '#FF6B00';
@@ -157,9 +184,8 @@ function drawPose(ctx, keypoints, cw, ch) {
     const kp2 = keypoints[j];
     if (kp1.score > 0.5 && kp2.score > 0.5) {
       ctx.beginPath();
-      // Apply offset to Y coordinates
-      ctx.moveTo(kp1.x * (cw/640), (kp1.y * (ch/480)) + offset);
-      ctx.lineTo(kp2.x * (cw/640), (kp2.y * (ch/480)) + offset);
+      ctx.moveTo(kp1.x * scale + offsetX, kp1.y * scale + offsetY);
+      ctx.lineTo(kp2.x * scale + offsetX, kp2.y * scale + offsetY);
       ctx.stroke();
     }
   });
@@ -168,23 +194,98 @@ function drawPose(ctx, keypoints, cw, ch) {
     if (kp.score > 0.5 && i > 10) {
       ctx.fillStyle = '#2EFF9A';
       ctx.beginPath();
-      ctx.arc(kp.x * (cw/640), (kp.y * (ch/480)) + offset, 5, 0, Math.PI*2);
+      ctx.arc(kp.x * scale + offsetX, kp.y * scale + offsetY, 5, 0, Math.PI*2);
       ctx.fill();
     }
   });
 }
 
 function updateAngles(k) {
-    const getA = (p1, p2, p3) => {
-        const v1 = {x:p1.x-p2.x, y:p1.y-p2.y, z:p1.z-p2.z};
-        const v2 = {x:p3.x-p2.x, y:p3.y-p2.y, z:p3.z-p2.z};
-        const dot = v1.x*v2.x + v1.y*v2.y + v1.z*v2.z;
-        const m1 = Math.sqrt(v1.x**2+v1.y**2+v1.z**2);
-        const m2 = Math.sqrt(v2.x**2+v2.y**2+v2.z**2);
-        return Math.round(Math.acos(dot/(m1*m2))*180/Math.PI);
-    };
-    document.getElementById('a-elbow').textContent = getA(k[11], k[13], k[15]) + '°';
-    document.getElementById('a-knee').textContent = getA(k[23], k[25], k[27]) + '°';
+  const getA = (p1, p2, p3) => {
+    const v1 = {x:p1.x-p2.x, y:p1.y-p2.y, z:p1.z-p2.z};
+    const v2 = {x:p3.x-p2.x, y:p3.y-p2.y, z:p3.z-p2.z};
+    const dot = v1.x*v2.x + v1.y*v2.y + v1.z*v2.z;
+    const m1 = Math.sqrt(v1.x**2+v1.y**2+v1.z**2);
+    const m2 = Math.sqrt(v2.x**2+v2.y**2+v2.z**2);
+    return Math.round(Math.acos(dot/(m1*m2))*180/Math.PI);
+  };
+  if(k[15].score > 0.5) document.getElementById('a-elbow').textContent = getA(k[11], k[13], k[15]) + '°';
+  if(k[27].score > 0.5) document.getElementById('a-knee').textContent = getA(k[23], k[25], k[27]) + '°';
+}
+
+// ── VIDEO RECORDING (3 SECONDS) ───────────────────────
+async function recordThreeSeconds() {
+  const btn = document.getElementById('recBtn');
+  btn.disabled = true;
+  btn.innerHTML = `<div class="rec-dot"></div> RECORDING...`;
+  
+  // Create a hidden canvas to merge video + skeleton
+  const recordCanvas = document.createElement('canvas');
+  const vid = document.getElementById('vid');
+  recordCanvas.width = vid.videoWidth;
+  recordCanvas.height = vid.videoHeight;
+  const rCtx = recordCanvas.getContext('2d');
+
+  recordedChunks = [];
+  const stream = recordCanvas.captureStream(30); // 30 FPS
+  recorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
+
+  recorder.ondataavailable = (e) => { if (e.data.size > 0) recordedChunks.push(e.data); };
+  recorder.onstop = exportVideo;
+
+  // Drawing loop for the recorder
+  const drawToRecord = async () => {
+    if (recorder.state === "recording") {
+      // 1. Draw Video Frame
+      rCtx.save();
+      rCtx.scale(-1, 1);
+      rCtx.drawImage(vid, -recordCanvas.width, 0, recordCanvas.width, recordCanvas.height);
+      rCtx.restore();
+
+      // 2. Overlay Skeleton (using AI coords directly)
+      const poses = await detector.estimatePoses(vid);
+      if (poses.length > 0) {
+        drawSkeletonForRecord(rCtx, poses[0].keypoints, recordCanvas.width, recordCanvas.height);
+      }
+      requestAnimationFrame(drawToRecord);
+    }
+  };
+
+  recorder.start();
+  drawToRecord();
+
+  setTimeout(() => {
+    recorder.stop();
+    btn.disabled = false;
+    btn.innerHTML = `<div class="rec-dot"></div> RECORD 3S CLIP`;
+  }, 3000);
+}
+
+function drawSkeletonForRecord(ctx, kp, w, h) {
+  ctx.strokeStyle = '#FF6B00'; ctx.lineWidth = 6;
+  const connections = [[11,12],[11,13],[13,15],[12,14],[14,16],[11,23],[12,24],[23,24],[23,25],[25,27],[24,26],[26,28]];
+  connections.forEach(([i, j]) => {
+    if (kp[i].score > 0.5 && kp[j].score > 0.5) {
+      ctx.beginPath();
+      ctx.moveTo(w - kp[i].x, kp[i].y); // Mirroring back for recording
+      ctx.lineTo(w - kp[j].x, kp[j].y);
+      ctx.stroke();
+    }
+  });
+}
+
+function exportVideo() {
+  const blob = new Blob(recordedChunks, { type: 'video/webm' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.style.display = 'block';
+  a.style.marginTop = '10px';
+  a.style.color = 'var(--good)';
+  a.href = url;
+  a.download = `shotform_clip_${Date.now()}.webm`;
+  a.textContent = "⬇️ DOWNLOAD LAST CLIP";
+  document.getElementById('downloadArea').innerHTML = '';
+  document.getElementById('downloadArea').appendChild(a);
 }
 
 window.addEventListener('resize', resize);
