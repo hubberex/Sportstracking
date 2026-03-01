@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SHOTFORM AI 3.5 — Analytics Pro</title>
+<title>SHOTFORM AI 3.6 — Expanded View</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=Inter:wght@400;700&display=swap');
 
@@ -23,12 +23,12 @@
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { background: var(--black); color: var(--text); font-family: 'Inter', sans-serif; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
 
-  header { padding: 12px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: var(--dark); z-index: 30; }
+  header { padding: 12px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: var(--dark); flex-shrink: 0; }
   .logo { font-family: 'Bebas Neue', sans-serif; color: var(--orange); font-size: 26px; letter-spacing: 3px; }
   
   .layout { display: flex; flex: 1; overflow: hidden; }
 
-  /* VIDEO ENGINE */
+  /* VIDEO ENGINE - Fixed for Mobile */
   .vwrap { flex: 1; position: relative; background: #000; display: flex; align-items: center; justify-content: center; overflow: hidden; }
   video#vid { position: absolute; width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
   canvas#overlay { position: absolute; width: 100%; height: 100%; transform: scaleX(-1); z-index: 5; pointer-events: none; }
@@ -36,77 +36,79 @@
   /* SIDEBAR DASHBOARD */
   .sidebar { width: 360px; background: var(--dark); border-left: 1px solid var(--border); padding: 20px; display: flex; flex-direction: column; gap: 15px; overflow-y: auto; }
   
-  /* OVERALL SCORE RING */
   .score-sec { display: flex; flex-direction: column; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); }
-  .ring-container { position: relative; width: 100px; height: 100px; }
-  .ring-svg { transform: rotate(-90deg); width: 100px; height: 100px; }
+  .ring-container { position: relative; width: 90px; height: 90px; }
+  .ring-svg { transform: rotate(-90deg); width: 90px; height: 90px; }
   .ring-bg { fill: none; stroke: var(--border); stroke-width: 8; }
   .ring-progress { fill: none; stroke: var(--orange); stroke-width: 8; stroke-linecap: round; stroke-dasharray: 283; stroke-dashoffset: 283; transition: stroke-dashoffset 0.5s; }
-  .score-text { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: 'Bebas Neue'; font-size: 32px; }
+  .score-text { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: 'Bebas Neue'; font-size: 28px; }
 
-  .sec-title { font-family: 'Bebas Neue'; font-size: 14px; letter-spacing: 2px; color: var(--muted); margin-bottom: 5px; }
-  
   .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .stat-box { background: var(--card); padding: 12px; border-radius: 8px; border: 1px solid var(--border); position: relative; overflow: hidden; }
   .stat-label { font-size: 9px; color: var(--muted); text-transform: uppercase; font-weight: bold; margin-bottom: 4px; }
-  .stat-val { font-family: 'Bebas Neue'; font-size: 26px; color: var(--text); }
+  .stat-val { font-family: 'Bebas Neue'; font-size: 24px; color: var(--text); }
   .stat-bar { position: absolute; bottom: 0; left: 0; height: 3px; background: var(--orange); transition: width 0.3s; }
 
-  /* SHOT LOG */
-  .log-container { flex: 1; overflow-y: auto; background: rgba(0,0,0,0.2); border-radius: 6px; padding: 10px; border: 1px solid var(--border); }
+  /* DURATION TOGGLE */
+  .toggle-wrap { display: flex; background: var(--black); border-radius: 6px; padding: 4px; border: 1px solid var(--border); margin-top: 5px; }
+  .tgl-btn { flex: 1; border: none; background: transparent; color: var(--muted); padding: 8px; font-family: 'Bebas Neue'; font-size: 14px; cursor: pointer; border-radius: 4px; }
+  .tgl-btn.active { background: var(--orange); color: black; }
+
+  .log-container { flex: 1; min-height: 120px; overflow-y: auto; background: rgba(0,0,0,0.2); border-radius: 6px; padding: 10px; border: 1px solid var(--border); }
   .log-table { width: 100%; border-collapse: collapse; font-size: 11px; }
   .log-table th { text-align: left; color: var(--muted); padding-bottom: 5px; border-bottom: 1px solid var(--border); }
   .log-table td { padding: 6px 0; border-bottom: 1px solid #222; }
 
-  .controls { margin-top: auto; display: flex; flex-direction: column; gap: 10px; padding-top: 15px; }
-  .btn { border: none; padding: 14px; border-radius: 6px; font-weight: bold; cursor: pointer; font-family: 'Inter'; display: flex; align-items: center; justify-content: center; gap: 10px; }
+  .controls { margin-top: auto; display: flex; flex-direction: column; gap: 8px; padding-top: 15px; }
+  .btn { border: none; padding: 14px; border-radius: 6px; font-weight: bold; cursor: pointer; font-family: 'Inter'; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
   .btn-rec { background: #ff4444; color: white; }
-  .btn-stop { background: var(--border); color: white; }
+  .btn-stop { background: var(--border); color: white; font-size: 12px; }
   
   #idle { position: absolute; inset: 0; z-index: 40; background: var(--black); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; }
-  .btn-start { background: var(--orange); padding: 18px 50px; font-family: 'Bebas Neue'; font-size: 22px; border-radius: 4px; border:none; cursor:pointer;}
+  .btn-start { background: var(--orange); padding: 18px 50px; font-family: 'Bebas Neue'; font-size: 22px; border: none; cursor: pointer; border-radius: 4px; }
 
-  @media (max-width: 900px) {
+  @media (max-width: 750px) {
     .layout { flex-direction: column; }
-    .sidebar { width: 100%; height: 55%; order: 2; border-left: none; }
-    .vwrap { order: 1; flex: 0.45; }
+    .vwrap { flex: none; height: 60vh; } /* Forces camera window to be 60% of screen height */
+    .sidebar { width: 100%; height: auto; border-left: none; border-top: 1px solid var(--border); flex: 1; }
   }
 </style>
 </head>
 <body>
 
 <header>
-  <div class="logo">SHOTFORM PRO <em>3.5</em></div>
-  <div id="aiStatus" style="font-family: 'DM Mono'; font-size: 10px; color: var(--good);">CALIBRATED</div>
+  <div class="logo">SHOTFORM PRO <em>3.6</em></div>
+  <div id="recStatus" style="font-family: 'DM Mono'; font-size: 10px; color: var(--bad); display: none;">● RECORDING</div>
 </header>
 
 <div class="layout">
   <div class="vwrap" id="container">
     <video id="vid" autoplay playsinline muted></video>
     <canvas id="overlay"></canvas>
-    
-    <div id="idle">
-      <button class="btn-start" id="startBtn" onclick="startCamera()">START ANALYTICS</button>
-    </div>
+    <div id="idle"><button class="btn-start" onclick="startCamera()">START ENGINE</button></div>
   </div>
 
   <div class="sidebar">
     <div class="score-sec">
       <div class="ring-container">
-        <svg class="ring-svg"><circle class="ring-bg" cx="50" cy="50" r="45"/><circle class="ring-progress" id="scoreRing" cx="50" cy="50" r="45"/></svg>
+        <svg class="ring-svg"><circle class="ring-bg" cx="45" cy="45" r="40"/><circle class="ring-progress" id="scoreRing" cx="45" cy="45" r="40"/></svg>
         <div class="score-text" id="v-total">0</div>
       </div>
-      <div class="sec-title" style="margin-top:5px">OVERALL FORM</div>
     </div>
 
     <div class="stats-grid">
-      <div class="stat-box"><div class="stat-label">Elbow Angle</div><div class="stat-val" id="v-elbow">0°</div><div class="stat-bar" id="bar-elbow"></div></div>
-      <div class="stat-box"><div class="stat-label">Knee Flex</div><div class="stat-val" id="v-knee">0°</div><div class="stat-bar" id="bar-knee"></div></div>
-      <div class="stat-box"><div class="stat-label">Shoulder Lv</div><div class="stat-val" id="v-shoulder">0px</div><div class="stat-bar" id="bar-shoulder"></div></div>
-      <div class="stat-box"><div class="stat-label">Hip Tilt</div><div class="stat-val" id="v-hip">0px</div><div class="stat-bar" id="bar-hip"></div></div>
+      <div class="stat-box"><div class="stat-label">Elbow</div><div class="stat-val" id="v-elbow">0°</div><div class="stat-bar" id="bar-elbow"></div></div>
+      <div class="stat-box"><div class="stat-label">Knee</div><div class="stat-val" id="v-knee">0°</div><div class="stat-bar" id="bar-knee"></div></div>
     </div>
 
-    <div class="sec-title">SHOT LOG</div>
+    <div style="margin-top: 5px;">
+      <div style="font-size: 9px; color: var(--muted); text-transform: uppercase; font-weight: bold; margin-bottom: 4px;">Clip Duration</div>
+      <div class="toggle-wrap">
+        <button class="tgl-btn active" id="tgl5" onclick="setDuration(5)">5s</button>
+        <button class="tgl-btn" id="tgl10" onclick="setDuration(10)">10s</button>
+      </div>
+    </div>
+
     <div class="log-container">
       <table class="log-table">
         <thead><tr><th>TIME</th><th>SCORE</th><th>WEAKNESS</th></tr></thead>
@@ -115,7 +117,7 @@
     </div>
 
     <div class="controls">
-      <button class="btn btn-rec" id="recBtn" onclick="recordThreeSeconds()" disabled>RECORD 3S CLIP</button>
+      <button class="btn btn-rec" id="recBtn" onclick="recordClip()" disabled>RECORD CLIP</button>
       <button class="btn btn-stop" onclick="stopSession()">STOP CAMERA</button>
       <div id="downloadArea"></div>
     </div>
@@ -128,15 +130,12 @@
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/pose-detection"></script>
 
 <script>
-let detector, stream, isTracking = false;
-let recorder, recordedChunks = [];
-let currentPose = null;
+let detector, stream, isTracking = false, currentPose = null;
+let recorder, recordedChunks = [], clipDuration = 5;
 
 async function init() {
   detector = await poseDetection.createDetector(poseDetection.SupportedModels.BlazePose, {
-    runtime: 'mediapipe',
-    solutionPath: 'https://cdn.jsdelivr.net/npm/@mediapipe/pose',
-    modelType: 'full'
+    runtime: 'mediapipe', solutionPath: 'https://cdn.jsdelivr.net/npm/@mediapipe/pose', modelType: 'full'
   });
 }
 
@@ -156,10 +155,15 @@ async function startCamera() {
 }
 
 function resize() {
-  const v = document.getElementById('vid');
-  const c = document.getElementById('overlay');
+  const v = document.getElementById('vid'), c = document.getElementById('overlay');
   const rect = v.getBoundingClientRect();
   c.width = rect.width; c.height = rect.height;
+}
+
+function setDuration(sec) {
+  clipDuration = sec;
+  document.getElementById('tgl5').classList.toggle('active', sec === 5);
+  document.getElementById('tgl10').classList.toggle('active', sec === 10);
 }
 
 function stopSession() {
@@ -170,167 +174,95 @@ function stopSession() {
 
 async function loop() {
   if (!isTracking) return;
-  const vid = document.getElementById('vid');
-  const canvas = document.getElementById('overlay');
-  const ctx = canvas.getContext('2d');
-
+  const vid = document.getElementById('vid'), canvas = document.getElementById('overlay'), ctx = canvas.getContext('2d');
   const poses = await detector.estimatePoses(vid);
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-
   if (poses && poses.length > 0) {
     currentPose = poses[0];
-    const mapping = calculateMapping(vid, canvas);
-    drawSkeleton(ctx, currentPose.keypoints, mapping);
+    const m = calculateMapping(vid, canvas);
+    drawSkeleton(ctx, currentPose.keypoints, m);
     updateAnalytics(currentPose.keypoints);
   }
   requestAnimationFrame(loop);
 }
 
 function calculateMapping(vid, canvas) {
-  const vA = vid.videoWidth / vid.videoHeight;
-  const cA = canvas.width / canvas.height;
-  let scale, oX = 0, oY = 0;
-  if (cA > vA) { scale = canvas.width / vid.videoWidth; oY = (canvas.height - vid.videoHeight * scale) / 2; }
-  else { scale = canvas.height / vid.videoHeight; oX = (canvas.width - vid.videoWidth * scale) / 2; }
-  return { scale, oX, oY };
+  const vA = vid.videoWidth / vid.videoHeight, cA = canvas.width / canvas.height;
+  let s, oX = 0, oY = 0;
+  if (cA > vA) { s = canvas.width / vid.videoWidth; oY = (canvas.height - vid.videoHeight * s) / 2; }
+  else { s = canvas.height / vid.videoHeight; oX = (canvas.width - vid.videoWidth * s) / 2; }
+  return { s, oX, oY };
 }
 
 function drawSkeleton(ctx, k, m) {
   const conn = [[11,12],[11,13],[13,15],[12,14],[14,16],[11,23],[12,24],[23,24],[23,25],[25,27],[24,26],[26,28]];
-  ctx.strokeStyle = '#FF6B00'; ctx.lineWidth = 4; ctx.lineCap = 'round';
+  ctx.strokeStyle = '#FF6B00'; ctx.lineWidth = 4;
   conn.forEach(([i, j]) => {
     if (k[i].score > 0.5 && k[j].score > 0.5) {
       ctx.beginPath();
-      ctx.moveTo(k[i].x * m.scale + m.oX, k[i].y * m.scale + m.oY);
-      ctx.lineTo(k[j].x * m.scale + m.oX, k[j].y * m.scale + m.oY);
+      ctx.moveTo(k[i].x * m.s + m.oX, k[i].y * m.s + m.oY);
+      ctx.lineTo(k[j].x * m.s + m.oX, k[j].y * m.s + m.oY);
       ctx.stroke();
     }
   });
 }
 
-function getAngle(p1, p2, p3) {
-  const v1 = {x: p1.x-p2.x, y: p1.y-p2.y, z: p1.z-p2.z};
-  const v2 = {x: p3.x-p2.x, y: p3.y-p2.y, z: p3.z-p2.z};
-  const dot = v1.x*v2.x + v1.y*v2.y + v1.z*v2.z;
-  const m1 = Math.sqrt(v1.x**2+v1.y**2+v1.z**2);
-  const m2 = Math.sqrt(v2.x**2+v2.y**2+v2.z**2);
-  return Math.round(Math.acos(dot/(m1*m2))*180/Math.PI);
-}
-
 function updateAnalytics(k) {
-  // 1. Calculations
-  const arm = k[15].y < k[16].y ? 'left' : 'right';
-  const eIdx = arm === 'left' ? [11,13,15] : [12,14,16];
-  const elbow = getAngle(k[eIdx[0]], k[eIdx[1]], k[eIdx[2]]);
-  const knee = Math.round((getAngle(k[23], k[25], k[27]) + getAngle(k[24], k[26], k[28])) / 2);
-  const shoulder = Math.abs(Math.round(k[11].y - k[12].y));
-  const hip = Math.abs(Math.round(k[23].y - k[24].y));
-
-  // 2. Individual Scores (0-100)
-  const sElbow = elbow > 85 && elbow < 115 ? 100 : Math.max(0, 100 - Math.abs(100 - elbow) * 2);
-  const sKnee = knee > 135 && knee < 160 ? 100 : Math.max(0, 100 - Math.abs(145 - knee) * 1.5);
-  const sShoulder = Math.max(0, 100 - shoulder * 4);
-  const sHip = Math.max(0, 100 - hip * 4);
-
-  // 3. UI Update
-  document.getElementById('v-elbow').textContent = elbow + '°';
-  document.getElementById('bar-elbow').style.width = sElbow + '%';
-  document.getElementById('v-knee').textContent = knee + '°';
-  document.getElementById('bar-knee').style.width = sKnee + '%';
-  document.getElementById('v-shoulder').textContent = shoulder + 'px';
-  document.getElementById('bar-shoulder').style.width = sShoulder + '%';
-  document.getElementById('v-hip').textContent = hip + 'px';
-  document.getElementById('bar-hip').style.width = sHip + '%';
-
-  const total = Math.round((sElbow + sKnee + sShoulder + sHip) / 4);
-  document.getElementById('v-total').textContent = total;
-  document.getElementById('scoreRing').style.strokeDashoffset = 283 - (283 * total / 100);
-  
-  // Color the ring based on score
-  const color = total > 80 ? 'var(--good)' : total > 50 ? 'var(--warn)' : 'var(--bad)';
-  document.getElementById('scoreRing').style.stroke = color;
+  const getA = (p1, p2, p3) => {
+    const v1 = {x: p1.x-p2.x, y: p1.y-p2.y, z: p1.z-p2.z}, v2 = {x: p3.x-p2.x, y: p3.y-p2.y, z: p3.z-p2.z};
+    const dot = v1.x*v2.x + v1.y*v2.y + v1.z*v2.z, m1 = Math.sqrt(v1.x**2+v1.y**2+v1.z**2), m2 = Math.sqrt(v2.x**2+v2.y**2+v2.z**2);
+    return Math.round(Math.acos(dot/(m1*m2))*180/Math.PI);
+  };
+  const arm = k[15].y < k[16].y ? [11,13,15] : [12,14,16];
+  const e = getA(k[arm[0]], k[arm[1]], k[arm[2]]), kn = Math.round((getA(k[23], k[25], k[27]) + getA(k[24], k[26], k[28])) / 2);
+  const sE = e > 85 && e < 115 ? 100 : Math.max(0, 100 - Math.abs(100 - e) * 2), sK = kn > 135 && kn < 160 ? 100 : Math.max(0, 100 - Math.abs(145 - kn) * 1.5);
+  document.getElementById('v-elbow').textContent = e + '°'; document.getElementById('bar-elbow').style.width = sE + '%';
+  document.getElementById('v-knee').textContent = kn + '°'; document.getElementById('bar-knee').style.width = sK + '%';
+  const total = Math.round((sE + sK) / 2); document.getElementById('v-total').textContent = total;
+  document.getElementById('scoreRing').style.strokeDashoffset = 251 - (251 * total / 100);
 }
 
-// ── ROBUST VIDEO RECORDING ────────────────────────────
-async function recordThreeSeconds() {
-  const btn = document.getElementById('recBtn');
-  btn.disabled = true;
-  btn.textContent = "RECORDING...";
-
-  const vid = document.getElementById('vid');
-  const recordCanvas = document.createElement('canvas');
-  recordCanvas.width = vid.videoWidth;
-  recordCanvas.height = vid.videoHeight;
+async function recordClip() {
+  const btn = document.getElementById('recBtn'), stat = document.getElementById('recStatus');
+  btn.disabled = true; stat.style.display = 'block';
+  const vid = document.getElementById('vid'), recordCanvas = document.createElement('canvas');
+  recordCanvas.width = vid.videoWidth; recordCanvas.height = vid.videoHeight;
   const rCtx = recordCanvas.getContext('2d');
-
   recordedChunks = [];
-  // Use 'video/webm;codecs=vp8' for best cross-browser compatibility
   const stream = recordCanvas.captureStream(30);
-  recorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
-
+  recorder = new MediaRecorder(stream, { mimeType: 'video/webm;codecs=vp8' });
   recorder.ondataavailable = (e) => { if (e.data.size > 0) recordedChunks.push(e.data); };
   recorder.onstop = () => {
-    saveShotToLog();
+    stat.style.display = 'none'; btn.disabled = false;
     const blob = new Blob(recordedChunks, { type: 'video/webm' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = `Shot_${Date.now()}.webm`; a.textContent = "⬇️ SAVE LAST CLIP";
-    a.style.display = "block"; a.style.color = "var(--orange)"; a.style.marginTop = "10px"; a.style.textAlign="center";
-    document.getElementById('downloadArea').innerHTML = '';
-    document.getElementById('downloadArea').appendChild(a);
-    btn.disabled = false; btn.textContent = "RECORD 3S CLIP";
+    const url = URL.createObjectURL(blob), a = document.createElement('a');
+    a.href = url; a.download = `Shot_${clipDuration}s_${Date.now()}.webm`; a.textContent = "⬇️ DOWNLOAD CLIP";
+    a.style.display = "block"; a.style.color = "var(--orange)"; a.style.textAlign="center";
+    document.getElementById('downloadArea').innerHTML = ''; document.getElementById('downloadArea').appendChild(a);
+    logShot();
   };
-
-  const drawFrame = () => {
+  const draw = () => {
     if (recorder.state === "recording") {
-      // Draw Mirrored Video
-      rCtx.save();
-      rCtx.scale(-1, 1);
-      rCtx.drawImage(vid, -recordCanvas.width, 0, recordCanvas.width, recordCanvas.height);
-      rCtx.restore();
-
-      // Draw Skeleton on top
-      if (currentPose) {
-        drawSkeletonSimple(rCtx, currentPose.keypoints, recordCanvas.width, recordCanvas.height);
-      }
-      requestAnimationFrame(drawFrame);
+      rCtx.save(); rCtx.scale(-1, 1); rCtx.drawImage(vid, -recordCanvas.width, 0, recordCanvas.width, recordCanvas.height); rCtx.restore();
+      if (currentPose) drawSkeletonSimple(rCtx, currentPose.keypoints, recordCanvas.width, recordCanvas.height);
+      requestAnimationFrame(draw);
     }
   };
-
-  recorder.start();
-  drawFrame();
-  setTimeout(() => recorder.stop(), 3000);
+  recorder.start(); draw();
+  setTimeout(() => recorder.stop(), clipDuration * 1000);
 }
 
 function drawSkeletonSimple(ctx, k, w, h) {
   const conn = [[11,12],[11,13],[13,15],[12,14],[14,16],[11,23],[12,24],[23,24],[23,25],[25,27],[24,26],[26,28]];
   ctx.strokeStyle = '#FF6B00'; ctx.lineWidth = 5;
-  conn.forEach(([i, j]) => {
-    if (k[i].score > 0.5 && k[j].score > 0.5) {
-      ctx.beginPath();
-      ctx.moveTo(w - k[i].x, k[i].y);
-      ctx.lineTo(w - k[j].x, k[j].y);
-      ctx.stroke();
-    }
-  });
+  conn.forEach(([i, j]) => { if (k[i].score > 0.5 && k[j].score > 0.5) { ctx.beginPath(); ctx.moveTo(w - k[i].x, k[i].y); ctx.lineTo(w - k[j].x, k[j].y); ctx.stroke(); } });
 }
 
-function saveShotToLog() {
+function logShot() {
   const score = document.getElementById('v-total').textContent;
-  const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-  const row = document.createElement('tr');
-  row.innerHTML = `<td>${time}</td><td style="color:var(--orange)">${score}%</td><td>${getWeakness()}</td>`;
-  document.getElementById('logBody').prepend(row);
-}
-
-function getWeakness() {
-  const e = parseInt(document.getElementById('bar-elbow').style.width);
-  const k = parseInt(document.getElementById('bar-knee').style.width);
-  const s = parseInt(document.getElementById('bar-shoulder').style.width);
-  if (e < 70) return "Elbow";
-  if (k < 70) return "Leg Power";
-  if (s < 70) return "Balance";
-  return "Perfect";
+  const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const row = `<tr><td>${time}</td><td style="color:var(--orange)">${score}%</td><td>${parseInt(score)>80?'Clean':'Check Elbow'}</td></tr>`;
+  document.getElementById('logBody').innerHTML = row + document.getElementById('logBody').innerHTML;
 }
 
 window.addEventListener('resize', resize);
