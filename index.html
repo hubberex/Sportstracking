@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SHOTFORM AI 4.2 — Safe Boot</title>
+<title>SHOTFORM AI 4.3 — Pro Biometric Engine</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=Inter:wght@400;700&display=swap');
 
@@ -23,7 +23,7 @@
 
   header { padding: 12px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: var(--dark); flex-shrink: 0; }
   .logo { font-family: 'Bebas Neue', sans-serif; color: var(--orange); font-size: 26px; letter-spacing: 3px; }
-  
+
   .layout { display: flex; flex: 1; overflow: hidden; }
 
   .vwrap { flex: 1; position: relative; background: #000; display: flex; align-items: center; justify-content: center; overflow: hidden; }
@@ -38,7 +38,7 @@
   }
 
   .sidebar { width: 340px; background: var(--dark); border-left: 1px solid var(--border); padding: 15px; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; }
-  
+
   .score-sec { display: flex; flex-direction: column; align-items: center; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
   .ring-container { position: relative; width: 80px; height: 80px; }
   .ring-svg { transform: rotate(-90deg); width: 80px; height: 80px; }
@@ -46,9 +46,12 @@
   .ring-progress { fill: none; stroke: var(--orange); stroke-width: 7; stroke-linecap: round; stroke-dasharray: 251; stroke-dashoffset: 251; transition: stroke-dashoffset 0.5s; }
   .score-text { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: 'Bebas Neue'; font-size: 24px; }
 
+  .coach-box { background: rgba(255, 107, 0, 0.1); border-left: 3px solid var(--orange); padding: 12px; border-radius: 4px; font-size: 12px; line-height: 1.4; }
+
   .gesture-hint {
     background: #1a1a1a; border: 1px solid var(--good); border-radius: 6px; padding: 10px;
     font-size: 10px; color: var(--good); text-align: center; font-family: 'DM Mono';
+    transition: background 0.2s;
   }
 
   .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
@@ -57,13 +60,16 @@
   .stat-val { font-family: 'Bebas Neue'; font-size: 20px; color: var(--text); }
 
   #idle { position: absolute; inset: 0; z-index: 40; background: var(--black); display: flex; flex-direction: column; align-items: center; justify-content: center; }
-  .btn-start { background: var(--orange); padding: 16px 40px; font-family: 'Bebas Neue'; font-size: 22px; border: none; cursor: pointer; border-radius: 4px; color: black; font-weight: bold; }
-  
-  #downloadArea a { display: block; background: var(--good); color: black; text-decoration: none; padding: 10px; text-align: center; border-radius: 4px; font-weight: bold; font-size: 11px; margin-top: 4px; }
+  .btn-start { background: var(--orange); padding: 16px 45px; font-family: 'Bebas Neue'; font-size: 22px; border: none; cursor: pointer; border-radius: 4px; color: black; font-weight: bold; }
+  .btn-start:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  #bootMsg { color: var(--muted); font-size: 11px; margin-top: 15px; font-family: 'DM Mono'; display: none; text-align: center; line-height: 1.8; max-width: 300px; }
+
+  #downloadArea a { display: block; background: var(--good); color: black; text-decoration: none; padding: 12px; text-align: center; border-radius: 4px; font-weight: bold; font-size: 11px; margin-top: 4px; }
 
   @media (max-width: 750px) {
     .layout { flex-direction: column; }
-    .vwrap { height: 50vh; flex: none; }
+    .vwrap { height: 55vh; flex: none; }
     .sidebar { width: 100%; border-left: none; border-top: 1px solid var(--border); }
   }
 </style>
@@ -71,8 +77,8 @@
 <body>
 
 <header>
-  <div class="logo">SHOTFORM PRO <em>4.2</em></div>
-  <div id="recStatus" style="font-family: 'DM Mono'; font-size: 10px; color: var(--bad); display: none;">● RECORDING</div>
+  <div class="logo">SHOTFORM PRO <em>4.3</em></div>
+  <div id="recStatus" style="font-family:'DM Mono';font-size:10px;color:var(--bad);display:none;">● RECORDING BIOMETRICS</div>
 </header>
 
 <div class="layout">
@@ -81,8 +87,8 @@
     <canvas id="overlay"></canvas>
     <div id="countdown">3</div>
     <div id="idle">
-      <button class="btn-start" id="launchBtn">LAUNCH ENGINE</button>
-      <p id="bootMsg" style="color: var(--muted); font-size: 11px; margin-top:15px; font-family:'DM Mono'; display:none;">BOOTING AI MODULES...</p>
+      <button class="btn-start" id="launchBtn" onclick="launchEngine()">LAUNCH ENGINE</button>
+      <p id="bootMsg">BOOTING AI MODULES...</p>
     </div>
   </div>
 
@@ -92,123 +98,204 @@
         <svg class="ring-svg"><circle class="ring-bg" cx="40" cy="40" r="37"/><circle class="ring-progress" id="scoreRing" cx="40" cy="40" r="37"/></svg>
         <div class="score-text" id="v-total">0</div>
       </div>
+      <div style="font-family:'Bebas Neue';font-size:12px;color:var(--muted);margin-top:5px;">SESSION SCORE</div>
     </div>
+
+    <div class="coach-box" id="coachMsg">Ready. Step back and use the 🙌 gesture to trigger a recording.</div>
     <div class="gesture-hint" id="gestureHint">🙌 HOLD "V" SHAPE ABOVE HEAD TO START</div>
+
     <div class="stats-grid">
       <div class="stat-box"><div class="stat-label">Elbow</div><div class="stat-val" id="v-elbow">0°</div></div>
-      <div class="stat-box"><div class="stat-label">Knee</div><div class="stat-val" id="v-knee">0°</div></div>
+      <div class="stat-box"><div class="stat-label">Leg Power</div><div class="stat-val" id="v-knee">0°</div></div>
+      <div class="stat-box"><div class="stat-label">Torso Lean</div><div class="stat-val" id="v-lean">0°</div></div>
+      <div class="stat-box"><div class="stat-label">Alignment</div><div class="stat-val" id="v-align">0px</div></div>
     </div>
+
     <div class="controls" style="margin-top:auto">
       <div id="downloadArea"></div>
-      <button style="background:var(--border); color:white; width:100%; padding:10px; border-radius:4px; border:none; cursor:pointer;" onclick="location.reload()">RELOAD</button>
+      <button style="background:var(--border);color:white;width:100%;padding:10px;border-radius:4px;border:none;cursor:pointer;" onclick="location.reload()">RELOAD SYSTEM</button>
     </div>
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-core@4.10.0"></script>
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-converter@4.10.0"></script>
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-webgl@4.10.0"></script>
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose"></script>
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/pose-detection@2.1.3"></script>
+<!--
+  SWITCHED FROM BLAZEPOSE TO MOVENET:
+  BlazePose (mediapipe runtime) fails in plain HTML because it requires WASM
+  binaries served with correct MIME types from a controlled origin — unreliable
+  on CDNs when opened as a local file or from arbitrary hosts.
+
+  MoveNet Thunder uses pure TensorFlow.js (WebGL backend), downloads a small
+  TFJS model graph, zero WASM, zero solutionPath — works everywhere.
+
+  MoveNet uses COCO 17-keypoint layout:
+    0=nose  1=l_eye  2=r_eye  3=l_ear  4=r_ear
+    5=l_shoulder  6=r_shoulder  7=l_elbow  8=r_elbow
+    9=l_wrist  10=r_wrist  11=l_hip  12=r_hip
+    13=l_knee  14=r_knee  15=l_ankle  16=r_ankle
+-->
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.10.0/dist/tf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/pose-detection@2.1.3/dist/pose-detection.min.js"></script>
 
 <script>
-let detector, stream, isTracking = false, currentPose = null, isRecording = false, gestureCounter = 0;
+'use strict';
+
+let detector = null, stream = null;
+let isTracking = false, isRecording = false;
+let currentPose = null, gestureCounter = 0;
+
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
-function playBeep(f, d) {
-  const osc = audioCtx.createOscillator();
-  const g = audioCtx.createGain();
-  osc.frequency.value = f; g.gain.value = 0.1;
-  osc.connect(g); g.connect(audioCtx.destination);
-  osc.start(); osc.stop(audioCtx.currentTime + d);
+// COCO keypoint indices
+const KP = {
+  L_SHOULDER: 5,  R_SHOULDER: 6,
+  L_ELBOW:    7,  R_ELBOW:    8,
+  L_WRIST:    9,  R_WRIST:   10,
+  L_HIP:     11,  R_HIP:     12,
+  L_KNEE:    13,  R_KNEE:    14,
+  L_ANKLE:   15,  R_ANKLE:   16
+};
+
+const CONNECTIONS = [
+  [KP.L_SHOULDER, KP.R_SHOULDER],
+  [KP.L_SHOULDER, KP.L_ELBOW], [KP.L_ELBOW, KP.L_WRIST],
+  [KP.R_SHOULDER, KP.R_ELBOW], [KP.R_ELBOW, KP.R_WRIST],
+  [KP.L_SHOULDER, KP.L_HIP],   [KP.R_SHOULDER, KP.R_HIP],
+  [KP.L_HIP, KP.R_HIP],
+  [KP.L_HIP, KP.L_KNEE],       [KP.L_KNEE, KP.L_ANKLE],
+  [KP.R_HIP, KP.R_KNEE],       [KP.R_KNEE, KP.R_ANKLE]
+];
+
+// ─── UI helpers ───────────────────────────────────────────────
+function setMsg(html, isError) {
+  const el = document.getElementById('bootMsg');
+  el.style.display = 'block';
+  el.style.color = isError ? '#FF4455' : '#888';
+  el.innerHTML = html;
 }
 
-async function startEngine() {
+function playBeep(freq, dur) {
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  gain.gain.value = 0.1;
+  osc.frequency.value = freq;
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  osc.start();
+  osc.stop(audioCtx.currentTime + dur);
+}
+
+// ─── Boot sequence ────────────────────────────────────────────
+async function launchEngine() {
   const btn = document.getElementById('launchBtn');
-  const msg = document.getElementById('bootMsg');
-  btn.style.display = 'none';
-  msg.style.display = 'block';
+  btn.disabled = true;
 
   try {
-    // 1. Force WebGL Backend
-    msg.textContent = "SETTING GPU BACKEND...";
-    await tf.setBackend('webgl');
-    await tf.ready();
+    // 1. TF backend
+    setMsg('INITIALIZING GPU BACKEND...');
+    try {
+      await tf.setBackend('webgl');
+      await tf.ready();
+    } catch (_) {
+      setMsg('WebGL unavailable — falling back to CPU...');
+      await tf.setBackend('cpu');
+      await tf.ready();
+    }
 
-    // 2. Camera Access
-    msg.textContent = "REQUESTING CAMERA...";
-    stream = await navigator.mediaDevices.getUserMedia({ 
-      video: { facingMode: 'user', width: 640, height: 480 }, 
-      audio: false 
+    // 2. Camera
+    setMsg('GPU READY ✓<br>REQUESTING CAMERA...');
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } },
+      audio: false
     });
-    
+
     const vid = document.getElementById('vid');
     vid.srcObject = stream;
-    vid.style.display = 'block';
+    await new Promise(resolve => {
+      vid.onloadedmetadata = () => { vid.play(); resolve(); };
+    });
 
-    // 3. Load Model
-    msg.textContent = "LOADING BLAZEPOSE...";
+    // 3. MoveNet — no WASM, no solutionPath, pure tfjs graph model
+    setMsg('CAMERA ACTIVE ✓<br>LOADING MOVENET AI...<br><span style="color:#555;font-size:9px">(~5MB download, one-time)</span>');
     detector = await poseDetection.createDetector(
-      poseDetection.SupportedModels.BlazePose, 
-      { runtime: 'mediapipe', solutionPath: 'https://cdn.jsdelivr.net/npm/@mediapipe/pose', modelType: 'full' }
+      poseDetection.SupportedModels.MoveNet,
+      { modelType: poseDetection.movenet.modelType.SINGLEPOSE_THUNDER }
     );
 
-    vid.onloadedmetadata = () => {
-      vid.play();
-      isTracking = true;
-      document.getElementById('idle').style.display = 'none';
-      resize(); loop();
-    };
-  } catch (e) {
-    console.error(e);
-    alert("BOOT FAILED: Ensure you are on HTTPS and camera is allowed.");
-    location.reload();
+    // 4. Go live
+    isTracking = true;
+    document.getElementById('idle').style.display = 'none';
+    vid.style.display = 'block';
+    resize();
+    loop();
+
+  } catch (err) {
+    console.error('[SHOTFORM]', err);
+    let hint = err.message;
+    if (err.name === 'NotAllowedError') hint = 'Camera permission denied. Allow camera access and retry.';
+    if (err.name === 'NotFoundError')   hint = 'No camera found on this device.';
+    if (location.protocol === 'file:')  hint += '<br><br>⚠️ File:// URLs block camera access.<br>Serve via localhost or HTTPS.';
+    setMsg('❌ BOOT FAILED<br>' + hint, true);
+    btn.textContent = 'RETRY';
+    btn.disabled = false;
   }
 }
 
-document.getElementById('launchBtn').addEventListener('click', () => {
-  if (audioCtx.state === 'suspended') audioCtx.resume();
-  startEngine();
-});
-
+// ─── Resize canvas to match video display size ─────────────────
 function resize() {
-  const v = document.getElementById('vid'), c = document.getElementById('overlay');
-  const rect = v.getBoundingClientRect();
-  c.width = rect.width; c.height = rect.height;
+  const vid = document.getElementById('vid');
+  const canvas = document.getElementById('overlay');
+  const rect = vid.getBoundingClientRect();
+  canvas.width  = rect.width;
+  canvas.height = rect.height;
 }
 
+// ─── Main inference loop ───────────────────────────────────────
 async function loop() {
   if (!isTracking) return;
-  const vid = document.getElementById('vid'), canvas = document.getElementById('overlay'), ctx = canvas.getContext('2d');
-  
+  const vid    = document.getElementById('vid');
+  const canvas = document.getElementById('overlay');
+  const ctx    = canvas.getContext('2d');
+
   try {
-    const poses = await detector.estimatePoses(vid, {flipHorizontal: false});
+    const poses = await detector.estimatePoses(vid, { flipHorizontal: false });
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    if (poses && poses.length > 0) {
+    if (poses.length > 0) {
       currentPose = poses[0];
-      const m = calculateMapping(vid, canvas);
+      const m = calcMapping(vid, canvas);
       drawSkeleton(ctx, currentPose.keypoints, m);
-      updateStats(currentPose.keypoints);
+      updateBiometrics(currentPose.keypoints);
       if (!isRecording) checkGesture(currentPose.keypoints);
     }
-  } catch(e) {}
+  } catch (_) { /* skip bad frame */ }
+
   requestAnimationFrame(loop);
 }
 
+// ─── Gesture detection (both wrists above shoulders, V-spread) ─
 function checkGesture(k) {
-  const lw = k[15], rw = k[16], le = k[2], re = k[5];
-  if (lw.score > 0.6 && rw.score > 0.6) {
-    if (lw.y < le.y && rw.y < re.y && Math.abs(lw.x - rw.x) > 100) {
+  const lw = k[KP.L_WRIST], rw = k[KP.R_WRIST];
+  const ls = k[KP.L_SHOULDER], rs = k[KP.R_SHOULDER];
+  const hint = document.getElementById('gestureHint');
+
+  if (lw.score > 0.5 && rw.score > 0.5 && ls.score > 0.5 && rs.score > 0.5) {
+    const handsUp   = lw.y < ls.y && rw.y < rs.y;
+    const wideSpread = Math.abs(lw.x - rw.x) > 100;
+    if (handsUp && wideSpread) {
       gestureCounter++;
-      document.getElementById('gestureHint').style.background = `rgba(46, 255, 154, ${gestureCounter/30})`;
-      if (gestureCounter > 30) { triggerCountdown(); gestureCounter = 0; }
+      hint.style.background = `rgba(46,255,154,${Math.min(gestureCounter / 35, 0.4)})`;
+      if (gestureCounter >= 35) {
+        gestureCounter = 0;
+        triggerCountdown();
+      }
     } else {
-      gestureCounter = 0;
-      document.getElementById('gestureHint').style.background = '#1a1a1a';
+      gestureCounter = Math.max(0, gestureCounter - 2);
+      hint.style.background = '#1a1a1a';
     }
   }
 }
 
+// ─── Countdown + recording trigger ────────────────────────────
 async function triggerCountdown() {
   isRecording = true;
   const cd = document.getElementById('countdown');
@@ -219,66 +306,136 @@ async function triggerCountdown() {
     await new Promise(r => setTimeout(r, 1000));
   }
   cd.style.display = 'none';
-  playBeep(1000, 0.3);
-  recordShot();
+  playBeep(1100, 0.3);
+  recordClip();
 }
 
-function calculateMapping(vid, canvas) {
-  const vA = vid.videoWidth / vid.videoHeight, cA = canvas.width / canvas.height;
+// ─── Video → canvas coordinate mapping ────────────────────────
+function calcMapping(vid, canvas) {
+  const vA = vid.videoWidth / vid.videoHeight;
+  const cA = canvas.width  / canvas.height;
   let s, oX = 0, oY = 0;
-  if (cA > vA) { s = canvas.width / vid.videoWidth; oY = (canvas.height - vid.videoHeight * s) / 2; }
-  else { s = canvas.height / vid.videoHeight; oX = (canvas.width - vid.videoWidth * s) / 2; }
+  if (cA > vA) { s = canvas.width  / vid.videoWidth;  oY = (canvas.height - vid.videoHeight * s) / 2; }
+  else          { s = canvas.height / vid.videoHeight; oX = (canvas.width  - vid.videoWidth  * s) / 2; }
   return { s, oX, oY };
 }
 
+// ─── Draw skeleton + joints ────────────────────────────────────
 function drawSkeleton(ctx, k, m) {
-  const conn = [[11,12],[11,13],[13,15],[12,14],[14,16],[11,23],[12,24],[23,24],[23,25],[25,27],[24,26],[26,28]];
-  ctx.strokeStyle = '#FF6B00'; ctx.lineWidth = 4;
-  conn.forEach(([i, j]) => { if (k[i].score > 0.5 && k[j].score > 0.5) {
-    ctx.beginPath(); ctx.moveTo(k[i].x * m.s + m.oX, k[i].y * m.s + m.oY); ctx.lineTo(k[j].x * m.s + m.oX, k[j].y * m.s + m.oY); ctx.stroke();
-  }});
+  const MIN_SCORE = 0.3;
+  ctx.strokeStyle = '#FF6B00';
+  ctx.lineWidth   = 4;
+  ctx.lineCap     = 'round';
+
+  CONNECTIONS.forEach(([i, j]) => {
+    if (k[i].score > MIN_SCORE && k[j].score > MIN_SCORE) {
+      ctx.beginPath();
+      ctx.moveTo(k[i].x * m.s + m.oX, k[i].y * m.s + m.oY);
+      ctx.lineTo(k[j].x * m.s + m.oX, k[j].y * m.s + m.oY);
+      ctx.stroke();
+    }
+  });
+
+  k.forEach(pt => {
+    if (pt.score > MIN_SCORE) {
+      ctx.beginPath();
+      ctx.arc(pt.x * m.s + m.oX, pt.y * m.s + m.oY, 5, 0, Math.PI * 2);
+      ctx.fillStyle = '#FF6B00';
+      ctx.fill();
+    }
+  });
 }
 
-function updateStats(k) {
-  const getA = (p1, p2, p3) => {
-    const v1 = {x: p1.x-p2.x, y: p1.y-p2.y, z: (p1.z||0)-(p2.z||0)}, v2 = {x: p3.x-p2.x, y: p3.y-p2.y, z: (p3.z||0)-(p2.z||0)};
-    const dot = v1.x*v2.x + v1.y*v2.y + v1.z*v2.z, m1 = Math.sqrt(v1.x**2+v1.y**2+v1.z**2), m2 = Math.sqrt(v2.x**2+v2.y**2+v2.z**2);
-    return Math.round(Math.acos(Math.min(1, Math.max(-1, dot / (m1 * m2)))) * 180 / Math.PI);
-  };
-  const elbow = getA(k[11], k[13], k[15]), knee = getA(k[23], k[25], k[27]);
+// ─── Angle between three 2D points ────────────────────────────
+function getAngle(a, mid, b) {
+  const v1 = { x: a.x - mid.x, y: a.y - mid.y };
+  const v2 = { x: b.x - mid.x, y: b.y - mid.y };
+  const dot = v1.x * v2.x + v1.y * v2.y;
+  const mag = Math.sqrt(v1.x**2 + v1.y**2) * Math.sqrt(v2.x**2 + v2.y**2);
+  if (mag === 0) return 0;
+  return Math.round(Math.acos(Math.min(1, Math.max(-1, dot / mag))) * 180 / Math.PI);
+}
+
+// ─── Biometric scoring ─────────────────────────────────────────
+function updateBiometrics(k) {
+  const ls = k[KP.L_SHOULDER], le = k[KP.L_ELBOW], lw = k[KP.L_WRIST];
+  const lh = k[KP.L_HIP],     lk = k[KP.L_KNEE],  la = k[KP.L_ANKLE];
+  const rs = k[KP.R_SHOULDER], rh = k[KP.R_HIP];
+
+  const elbow = getAngle(ls, le, lw);
+  const knee  = getAngle(lh, lk, la);
+  const lean  = Math.abs(Math.round(Math.atan2(ls.x - lh.x, ls.y - lh.y) * 180 / Math.PI));
+  const align = Math.abs(Math.round(ls.x - rs.x));
+
   document.getElementById('v-elbow').textContent = elbow + '°';
-  document.getElementById('v-knee').textContent = knee + '°';
-  const score = Math.max(0, 100 - Math.abs(100-elbow));
+  document.getElementById('v-knee').textContent  = knee  + '°';
+  document.getElementById('v-lean').textContent  = lean  + '°';
+  document.getElementById('v-align').textContent = align + 'px';
+
+  let score    = 100;
+  let feedback = 'Elite mechanics. Maintain this set point.';
+  if (elbow < 85) { score -= 15; feedback = "Tuck your elbow. It's flaring out."; }
+  if (knee  > 165){ score -= 20; feedback = 'Bend your knees for power.'; }
+  if (lean  > 15) { score -= 10; feedback = 'Stop leaning back. Center your weight.'; }
+  if (align > 40) { score -= 15; feedback = 'Square your shoulders to the rim.'; }
+  score = Math.max(0, score);
+
   document.getElementById('v-total').textContent = score;
   document.getElementById('scoreRing').style.strokeDashoffset = 232 - (232 * score / 100);
+  document.getElementById('coachMsg').textContent = feedback;
 }
 
-async function recordShot() {
+// ─── 5-second annotated recording ─────────────────────────────
+async function recordClip() {
+  const vid = document.getElementById('vid');
+  const recCanvas = document.createElement('canvas');
+  recCanvas.width  = vid.videoWidth;
+  recCanvas.height = vid.videoHeight;
+  const rCtx   = recCanvas.getContext('2d');
+  const chunks = [];
+
   document.getElementById('recStatus').style.display = 'block';
-  const vid = document.getElementById('vid'), recCanvas = document.createElement('canvas');
-  recCanvas.width = vid.videoWidth; recCanvas.height = vid.videoHeight;
-  const rCtx = recCanvas.getContext('2d');
-  let chunks = [];
-  const recorder = new MediaRecorder(recCanvas.captureStream(30), { mimeType: 'video/webm' });
-  recorder.ondataavailable = (e) => chunks.push(e.data);
-  recorder.onstop = () => {
-    document.getElementById('recStatus').style.display = 'none'; isRecording = false;
-    const url = URL.createObjectURL(new Blob(chunks, { type: 'video/webm' }));
-    const a = document.createElement('a'); a.href = url; a.download = `Shot_${Date.now()}.webm`; a.innerHTML = "💾 SAVE VIDEO CLIP";
-    document.getElementById('downloadArea').innerHTML = ''; document.getElementById('downloadArea').appendChild(a);
-  };
-  const draw = () => { if (recorder.state === "recording") {
-    rCtx.save(); rCtx.scale(-1, 1); rCtx.drawImage(vid, -recCanvas.width, 0, recCanvas.width, recCanvas.height); rCtx.restore();
-    if (currentPose) drawSkeletonSimple(rCtx, currentPose.keypoints, recCanvas.width, recCanvas.height);
-    requestAnimationFrame(draw);
-  }};
-  recorder.start(); draw(); setTimeout(() => recorder.stop(), 5000);
-}
 
-function drawSkeletonSimple(ctx, k, w, h) {
-  const conn = [[11,12],[11,13],[13,15],[12,14],[14,16],[11,23],[12,24],[23,24],[23,25],[25,27],[24,26],[26,28]];
-  ctx.strokeStyle = '#FF6B00'; ctx.lineWidth = 5;
-  conn.forEach(([i, j]) => { if (k[i].score > 0.5 && k[j].score > 0.5) { ctx.beginPath(); ctx.moveTo(w - k[i].x, k[i].y); ctx.lineTo(w - k[j].x, k[j].y); ctx.stroke(); }});
+  const recorder = new MediaRecorder(recCanvas.captureStream(30), { mimeType: 'video/webm' });
+  recorder.ondataavailable = e => chunks.push(e.data);
+  recorder.onstop = () => {
+    document.getElementById('recStatus').style.display = 'none';
+    isRecording = false;
+    const url = URL.createObjectURL(new Blob(chunks, { type: 'video/webm' }));
+    const a = document.createElement('a');
+    a.href     = url;
+    a.download = `ShotForm_${Date.now()}.webm`;
+    a.innerHTML = '💾 SAVE ANALYZED SHOT';
+    const area = document.getElementById('downloadArea');
+    area.innerHTML = '';
+    area.appendChild(a);
+  };
+
+  const drawFrame = () => {
+    if (recorder.state !== 'recording') return;
+    rCtx.save();
+    rCtx.scale(-1, 1);
+    rCtx.drawImage(vid, -recCanvas.width, 0, recCanvas.width, recCanvas.height);
+    rCtx.restore();
+
+    if (currentPose) {
+      const k = currentPose.keypoints;
+      rCtx.strokeStyle = '#FF6B00'; rCtx.lineWidth = 6; rCtx.lineCap = 'round';
+      CONNECTIONS.forEach(([i, j]) => {
+        if (k[i].score > 0.3 && k[j].score > 0.3) {
+          rCtx.beginPath();
+          rCtx.moveTo(recCanvas.width - k[i].x, k[i].y);
+          rCtx.lineTo(recCanvas.width - k[j].x, k[j].y);
+          rCtx.stroke();
+        }
+      });
+    }
+    requestAnimationFrame(drawFrame);
+  };
+
+  recorder.start();
+  drawFrame();
+  setTimeout(() => { if (recorder.state === 'recording') recorder.stop(); }, 5000);
 }
 
 window.addEventListener('resize', resize);
